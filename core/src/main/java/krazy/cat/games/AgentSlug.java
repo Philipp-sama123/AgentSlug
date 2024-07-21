@@ -6,30 +6,26 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Rectangle;
 
 public class AgentSlug extends Game {
-    public static final int PLAYER_JUMP_HEIGHT = 125;
-    public static final int PLAYER_MOVE_DISTANCE = 150;
+    public static final int SCALE = 5;
+    public static final float MOVE_SPEED = 200f;
+    public static final float JUMP_SPEED = -100f;
+    public static final float GRAVITY = 7.5f;
 
-    SpriteBatch batch;
+    private SpriteBatch batch;
+    private Texture background;
+    private BitmapFont textToShow;
 
-    Texture background;
+    private int score = 0;
+    private float velocity = 0;
 
-    BitmapFont textToShow;
-
-    int pause = 0;
-    int gameState = 0;
-    int score = 0;
-
-    float gravity = 7.5f;
-    float velocity = 0;
-
-    Rectangle mainCharacterRectangle;
-
+    private Rectangle mainCharacterRectangle;
     private CharacterManager characterManager;
     private float stateTime;
+
+    private InputHandler inputHandler;
 
     @Override
     public void create() {
@@ -39,61 +35,64 @@ public class AgentSlug extends Game {
         characterManager = new CharacterManager(new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png"));
         createTextToShow();
 
-        Gdx.input.setInputProcessor(new GestureDetector(new InputHandler(this)));
+        inputHandler = new InputHandler(this);
+        Gdx.input.setInputProcessor(inputHandler);
         stateTime = 0f;
     }
 
     @Override
     public void render() {
         batch.begin();
-        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        stateTime += Gdx.graphics.getDeltaTime();
-
-        if (gameState == 0) {
-            if (Gdx.input.justTouched()) {
-                gameState = 1;
-            }
-        } else if (gameState == 1) {
-            if (pause < 2) {
-                pause++;
-            } else {
-                pause = 0;
-                characterManager.update(stateTime);
-            }
-
-            velocity += gravity;
-            int newMainCharacterY = characterManager.getMainCharacterY() - (int) velocity;
-
-            if (newMainCharacterY <= 0) {
-                newMainCharacterY = 0;
-            }
-            characterManager.setMainCharacterY(newMainCharacterY);
-
-            mainCharacterRectangle = characterManager.getMainCharacterRectangle();
-        } else if (gameState == 2) {
-            if (Gdx.input.justTouched()) {
-                restartGame();
-            }
-        }
-
-        // Drawing the character based on the game state
-        if (gameState == 2) {
-            batch.draw(
-                characterManager.getCharacterTexture(),
-                characterManager.getMainCharacterX(),
-                characterManager.getMainCharacterY()
-            );
-        } else {
-            batch.draw(
-                characterManager.getCurrentFrame(),
-                characterManager.getMainCharacterX(),
-                characterManager.getMainCharacterY()
-            );
-        }
-        textToShow.draw(batch, String.valueOf(score), 100, 200);
-
+        renderBackground();
+        updateGameState(Gdx.graphics.getDeltaTime());
+        renderCharacter();
+        renderScore();
         batch.end();
+    }
+
+    private void renderBackground() {
+        batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    private void updateGameState(float deltaTime) {
+        stateTime += deltaTime;
+        velocity += GRAVITY;
+
+        if (inputHandler.isJumpPressed() && characterManager.getMainCharacterY() == 0) {
+            velocity = JUMP_SPEED;
+        }
+
+        int newMainCharacterY = characterManager.getMainCharacterY() - (int) velocity;
+        if (newMainCharacterY <= 0) {
+            newMainCharacterY = 0;
+            velocity = 0;
+        }
+        characterManager.setMainCharacterY(newMainCharacterY);
+
+        boolean isWalking = false;
+        if (inputHandler.isLeftPressed()) {
+            moveCharacterLeft(deltaTime);
+            isWalking = true;
+        } else if (inputHandler.isRightPressed()) {
+            moveCharacterRight(deltaTime);
+            isWalking = true;
+        }
+
+        characterManager.update(deltaTime, isWalking);
+        mainCharacterRectangle = characterManager.getMainCharacterRectangle();
+    }
+
+    private void renderCharacter() {
+        batch.draw(
+            characterManager.getCurrentFrame(),
+            characterManager.getMainCharacterX(),
+            characterManager.getMainCharacterY(),
+            64 * SCALE, 64 * SCALE
+        );
+    }
+
+    private void renderScore() {
+        textToShow.draw(batch, String.valueOf(score), 100, 200);
     }
 
     @Override
@@ -110,33 +109,19 @@ public class AgentSlug extends Game {
         textToShow.getData().setScale(10);
     }
 
-    private void restartGame() {
-        score = 0;
-        gameState = 1;
-        velocity = 0;
-        stateTime = 0f;
-        characterManager.resetCharacterPosition();
-    }
-
-    public int getGameState() {
-        return gameState;
-    }
-
-    public void setVelocity(float velocity) {
-        this.velocity = velocity;
-    }
-
-    public void moveCharacterLeft() {
-        int newMainCharacterX = characterManager.getMainCharacterX() - PLAYER_MOVE_DISTANCE;
+    private void moveCharacterLeft(float deltaTime) {
+        int newMainCharacterX = (int) (characterManager.getMainCharacterX() - MOVE_SPEED * deltaTime);
         if (newMainCharacterX > 0) {
             characterManager.setMainCharacterX(newMainCharacterX);
+            characterManager.setFacingRight(false);
         }
     }
 
-    public void moveCharacterRight() {
-        int newMainCharacterX = characterManager.getMainCharacterX() + PLAYER_MOVE_DISTANCE;
+    private void moveCharacterRight(float deltaTime) {
+        int newMainCharacterX = (int) (characterManager.getMainCharacterX() + MOVE_SPEED * deltaTime);
         if (newMainCharacterX < Gdx.graphics.getWidth() - characterManager.getCurrentFrame().getRegionWidth()) {
             characterManager.setMainCharacterX(newMainCharacterX);
+            characterManager.setFacingRight(true);
         }
     }
 }

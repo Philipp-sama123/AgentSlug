@@ -10,16 +10,20 @@ public class CharacterManager {
     private int mainCharacterY;
     private int mainCharacterX;
     private float stateTime;
+    private boolean isWalking;
+    private boolean facingRight;
 
     public CharacterManager(Texture spriteSheet) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
         resetCharacterPosition();
+        facingRight = false; // Character starts facing left
     }
 
     public void resetCharacterPosition() {
         mainCharacterY = Gdx.graphics.getHeight() / 2;
         mainCharacterX = Gdx.graphics.getWidth() / 2 - (getCurrentFrame() != null ? getCurrentFrame().getRegionWidth() / 2 : 0);
         stateTime = 0f;
+        isWalking = false;
     }
 
     public void dispose() {
@@ -27,9 +31,16 @@ public class CharacterManager {
     }
 
     public TextureRegion getCurrentFrame() {
-        TextureRegion frame = animationSetAgent.getIdleFrame(stateTime);
-        if (frame == null) {
-            Gdx.app.log("CharacterManager", "Current frame is null");
+        TextureRegion frame;
+        if (isWalking) {
+            frame = animationSetAgent.getWalkFrame(stateTime);
+        } else {
+            frame = animationSetAgent.getIdleFrame(stateTime);
+        }
+        if (facingRight && !animationSetAgent.isFlipped()) {
+            animationSetAgent.flipFramesHorizontally();
+        } else if (!facingRight && animationSetAgent.isFlipped()) {
+            animationSetAgent.flipFramesHorizontally();
         }
         return frame;
     }
@@ -50,26 +61,22 @@ public class CharacterManager {
         this.mainCharacterX = mainCharacterX;
     }
 
-    public void update(float deltaTime) {
+    public void update(float deltaTime, boolean isWalking) {
         stateTime += deltaTime;
+        this.isWalking = isWalking;
+    }
+
+    public void setFacingRight(boolean facingRight) {
+        this.facingRight = facingRight;
     }
 
     public Rectangle getMainCharacterRectangle() {
         TextureRegion currentFrame = getCurrentFrame();
-        if (currentFrame != null) {
-            return new Rectangle(
-                mainCharacterX,
-                mainCharacterY,
-                currentFrame.getRegionWidth(),
-                currentFrame.getRegionHeight()
-            );
-        } else {
-            // Handle the case where the frame is null
-            return new Rectangle(mainCharacterX, mainCharacterY, 0, 0);
-        }
-    }
-
-    public Texture getCharacterTexture() {
-        return animationSetAgent.getSpriteSheet();
+        return new Rectangle(
+            mainCharacterX,
+            mainCharacterY,
+            currentFrame.getRegionWidth(),
+            currentFrame.getRegionHeight()
+        );
     }
 }
