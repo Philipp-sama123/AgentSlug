@@ -11,10 +11,8 @@ public class AnimationSetAgent {
     private final TextureRegion[] idleFrames;
     private final TextureRegion[] walkFrames;
     private final TextureRegion[] runFrames;
-//    private final TextureRegion[] fallingFrames;
-//    private final TextureRegion[] jumpingFrames;
-//    private final TextureRegion[] attackingFrames;
-//    private final TextureRegion[] dieFrames;
+    private final TextureRegion[] fallingFrames;
+    private final TextureRegion[] jumpingFrames;
     private boolean flipped = false;
 
     public AnimationSetAgent(Texture spriteSheet) {
@@ -24,10 +22,8 @@ public class AnimationSetAgent {
         idleFrames = setupFrames(textureRegions, 0, 5);
         walkFrames = setupFrames(textureRegions, 11, 8);
         runFrames = setupFrames(textureRegions, 18, 5);
-//        fallingFrames = setupFrames(textureRegions, 23, 3);  // Example indices
-//        jumpingFrames = setupFrames(textureRegions, 26, 3);  // Example indices
-//        attackingFrames = setupFrames(textureRegions, 29, 4);  // Example indices
-//        dieFrames = setupFrames(textureRegions, 32, 6);  // Example indices
+        fallingFrames = setupFrames(textureRegions, 25, 5);  // Example indices
+        jumpingFrames = setupFrames(textureRegions, 22, 5);  // Example indices
     }
 
     private TextureRegion[] setupFrames(TextureRegion[][] textureRegions, int row, int count) {
@@ -48,6 +44,14 @@ public class AnimationSetAgent {
         return getFrame(runFrames, stateTime);
     }
 
+    public TextureRegion getFallingFrame(float stateTime) {
+        return getFrame(fallingFrames, stateTime);
+    }
+
+    public TextureRegion getJumpingFrame(float stateTime) {
+        return getFrame(jumpingFrames, stateTime);
+    }
+
     private TextureRegion getFrame(TextureRegion[] frames, float stateTime) {
         return frames[(int) (stateTime / FRAME_DURATION) % frames.length];
     }
@@ -60,10 +64,8 @@ public class AnimationSetAgent {
         flipArray(idleFrames);
         flipArray(walkFrames);
         flipArray(runFrames);
-//        flipArray(fallingFrames);
-//        flipArray(jumpingFrames);
-//        flipArray(attackingFrames);
-//        flipArray(dieFrames);
+        flipArray(fallingFrames);
+        flipArray(jumpingFrames);
         flipped = !flipped;
     }
 

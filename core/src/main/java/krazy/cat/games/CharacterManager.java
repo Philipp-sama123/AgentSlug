@@ -7,11 +7,13 @@ import com.badlogic.gdx.math.Rectangle;
 
 public class CharacterManager {
     private final AnimationSetAgent animationSetAgent;
-    private int mainCharacterY;
-    private int mainCharacterX;
+    private float mainCharacterY;
+    private float mainCharacterX;
     private float stateTime;
     private boolean isWalking;
     private boolean facingRight;
+    private boolean isJumping;
+    private boolean isFalling;
 
     public CharacterManager(Texture spriteSheet) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
@@ -20,10 +22,12 @@ public class CharacterManager {
     }
 
     public void resetCharacterPosition() {
-        mainCharacterY = Gdx.graphics.getHeight() / 2;
-        mainCharacterX = Gdx.graphics.getWidth() / 2 - (getCurrentFrame() != null ? getCurrentFrame().getRegionWidth() / 2 : 0);
+        mainCharacterY = Gdx.graphics.getHeight() / 2f;
+        mainCharacterX = Gdx.graphics.getWidth() / 2f - (getCurrentFrame() != null ? getCurrentFrame().getRegionWidth() / 2f : 0f);
         stateTime = 0f;
         isWalking = false;
+        isJumping = false;
+        isFalling = false;
     }
 
     public void dispose() {
@@ -32,7 +36,11 @@ public class CharacterManager {
 
     public TextureRegion getCurrentFrame() {
         TextureRegion frame;
-        if (isWalking) {
+        if (isJumping) {
+            frame = animationSetAgent.getJumpingFrame(stateTime);
+        } else if (isFalling) {
+            frame = animationSetAgent.getFallingFrame(stateTime);
+        } else if (isWalking) {
             frame = animationSetAgent.getWalkFrame(stateTime);
         } else {
             frame = animationSetAgent.getIdleFrame(stateTime);
@@ -48,25 +56,27 @@ public class CharacterManager {
         return frame;
     }
 
-    public int getMainCharacterY() {
+    public float getMainCharacterY() {
         return mainCharacterY;
     }
 
-    public void setMainCharacterY(int mainCharacterY) {
+    public void setMainCharacterY(float mainCharacterY) {
         this.mainCharacterY = mainCharacterY;
     }
 
-    public int getMainCharacterX() {
+    public float getMainCharacterX() {
         return mainCharacterX;
     }
 
-    public void setMainCharacterX(int mainCharacterX) {
+    public void setMainCharacterX(float mainCharacterX) {
         this.mainCharacterX = mainCharacterX;
     }
 
-    public void update(float deltaTime, boolean isWalking) {
+    public void update(float deltaTime, boolean isWalking, boolean isJumping, boolean isFalling) {
         stateTime += deltaTime;
         this.isWalking = isWalking;
+        this.isJumping = isJumping;
+        this.isFalling = isFalling;
     }
 
     public void setFacingRight(boolean facingRight) {

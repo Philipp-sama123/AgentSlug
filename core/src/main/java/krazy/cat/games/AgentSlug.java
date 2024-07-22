@@ -11,15 +11,15 @@ import com.badlogic.gdx.math.Rectangle;
 public class AgentSlug extends Game {
     public static final int SCALE = 5;
     public static final float MOVE_SPEED = 200f;
-    public static final float JUMP_SPEED = -100f;
-    public static final float GRAVITY = 7.5f;
+    public static final float JUMP_SPEED = -50f;
+    public static final float GRAVITY = 2.5f;
 
     private SpriteBatch batch;
     private Texture background;
     private BitmapFont textToShow;
 
     private int score = 0;
-    private float velocity = 0;
+    private float velocityY = 0;
 
     private Rectangle mainCharacterRectangle;
     private CharacterManager characterManager;
@@ -56,20 +56,30 @@ public class AgentSlug extends Game {
 
     private void updateGameState(float deltaTime) {
         stateTime += deltaTime;
-        velocity += GRAVITY;
+        velocityY += GRAVITY;
+
+        boolean isJumping = false;
+        boolean isFalling = false;
+        boolean isWalking = false;
 
         if (inputHandler.isJumpPressed() && characterManager.getMainCharacterY() == 0) {
-            velocity = JUMP_SPEED;
+            velocityY = JUMP_SPEED;
+            isJumping = true;
         }
 
-        int newMainCharacterY = characterManager.getMainCharacterY() - (int) velocity;
-        if (newMainCharacterY <= 0) {
+        if (velocityY < 0 && characterManager.getMainCharacterY() > 0) {
+            isFalling = true;
+        }
+
+        float newMainCharacterY = characterManager.getMainCharacterY() - velocityY;
+        if (newMainCharacterY < 0) {
             newMainCharacterY = 0;
-            velocity = 0;
+            velocityY = 0;
+            isFalling = false;
+            isJumping = false;
         }
         characterManager.setMainCharacterY(newMainCharacterY);
 
-        boolean isWalking = false;
         if (inputHandler.isLeftPressed()) {
             moveCharacterLeft(deltaTime);
             isWalking = true;
@@ -78,7 +88,7 @@ public class AgentSlug extends Game {
             isWalking = true;
         }
 
-        characterManager.update(deltaTime, isWalking);
+        characterManager.update(deltaTime, isWalking, isJumping, isFalling);
         mainCharacterRectangle = characterManager.getMainCharacterRectangle();
     }
 
@@ -110,7 +120,7 @@ public class AgentSlug extends Game {
     }
 
     private void moveCharacterLeft(float deltaTime) {
-        int newMainCharacterX = (int) (characterManager.getMainCharacterX() - MOVE_SPEED * deltaTime);
+        float newMainCharacterX = characterManager.getMainCharacterX() - MOVE_SPEED * deltaTime;
         if (newMainCharacterX > 0) {
             characterManager.setMainCharacterX(newMainCharacterX);
             characterManager.setFacingRight(false);
@@ -118,7 +128,7 @@ public class AgentSlug extends Game {
     }
 
     private void moveCharacterRight(float deltaTime) {
-        int newMainCharacterX = (int) (characterManager.getMainCharacterX() + MOVE_SPEED * deltaTime);
+        float newMainCharacterX = characterManager.getMainCharacterX() + MOVE_SPEED * deltaTime;
         if (newMainCharacterX < Gdx.graphics.getWidth() - characterManager.getCurrentFrame().getRegionWidth()) {
             characterManager.setMainCharacterX(newMainCharacterX);
             characterManager.setFacingRight(true);
