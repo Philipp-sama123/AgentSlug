@@ -22,7 +22,7 @@ public class AnimationSetAgent {
         idleFrames = setupFrames(textureRegions, 0, 5);
         walkFrames = setupFrames(textureRegions, 11, 8);
         runFrames = setupFrames(textureRegions, 18, 5);
-        fallingFrames = setupFrames(textureRegions, 25, 5);  // Example indices
+        fallingFrames = setupFrames(textureRegions, 26, 5);  // Example indices
         jumpingFrames = setupFrames(textureRegions, 22, 5);  // Example indices
     }
 

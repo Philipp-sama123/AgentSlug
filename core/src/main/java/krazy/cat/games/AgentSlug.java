@@ -10,8 +10,8 @@ import com.badlogic.gdx.math.Rectangle;
 
 public class AgentSlug extends Game {
     public static final int SCALE = 5;
-    public static final float MOVE_SPEED = 200f;
-    public static final float JUMP_SPEED = -50f;
+    public static final float MOVE_SPEED = 200.f;
+    public static final float JUMP_SPEED = -50.f;
     public static final float GRAVITY = 2.5f;
 
     private SpriteBatch batch;
@@ -19,7 +19,7 @@ public class AgentSlug extends Game {
     private BitmapFont textToShow;
 
     private int score = 0;
-    private float velocityY = 0;
+    private float velocityY = 0.f;
 
     private Rectangle mainCharacterRectangle;
     private CharacterManager characterManager;
@@ -37,7 +37,7 @@ public class AgentSlug extends Game {
 
         inputHandler = new InputHandler(this);
         Gdx.input.setInputProcessor(inputHandler);
-        stateTime = 0f;
+        stateTime = 0.f;
     }
 
     @Override
@@ -62,18 +62,18 @@ public class AgentSlug extends Game {
         boolean isFalling = false;
         boolean isWalking = false;
 
-        if (inputHandler.isJumpPressed() && characterManager.getMainCharacterY() == 0) {
+        if (inputHandler.isJumpPressed() && characterManager.getMainCharacterY() == 0.f) {
             velocityY = JUMP_SPEED;
             isJumping = true;
         }
 
-        if (velocityY < 0 && characterManager.getMainCharacterY() > 0) {
+        if (velocityY < 0.f && characterManager.getMainCharacterY() > 0.f) {
             isFalling = true;
         }
 
         float newMainCharacterY = characterManager.getMainCharacterY() - velocityY;
-        if (newMainCharacterY < 0) {
-            newMainCharacterY = 0;
+        if (newMainCharacterY < 0.f) {
+            newMainCharacterY = 0.f;
             velocityY = 0;
             isFalling = false;
             isJumping = false;
