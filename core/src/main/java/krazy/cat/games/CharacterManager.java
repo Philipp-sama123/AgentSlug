@@ -37,11 +37,14 @@ public class CharacterManager {
         } else {
             frame = animationSetAgent.getIdleFrame(stateTime);
         }
+
+        // Flip frames if necessary
         if (facingRight && !animationSetAgent.isFlipped()) {
             animationSetAgent.flipFramesHorizontally();
         } else if (!facingRight && animationSetAgent.isFlipped()) {
             animationSetAgent.flipFramesHorizontally();
         }
+
         return frame;
     }
 
