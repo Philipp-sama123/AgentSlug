@@ -6,26 +6,23 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
 public class AgentSlug extends Game {
     public static final int SCALE = 5;
-    public static final float MOVE_SPEED = 200.f;
-    public static final float JUMP_SPEED = -50.f;
-    public static final float GRAVITY = 2.5f;
 
     private SpriteBatch batch;
     private Texture background;
     private BitmapFont textToShow;
 
     private int score = 0;
-    private float velocityY = 0.f;
 
-    private Rectangle mainCharacterRectangle;
     private CharacterManager characterManager;
     private float stateTime;
 
     private InputHandler inputHandler;
+    private ShapeRenderer shapeRenderer;
 
     @Override
     public void create() {
@@ -38,6 +35,8 @@ public class AgentSlug extends Game {
         inputHandler = new InputHandler(this);
         Gdx.input.setInputProcessor(inputHandler);
         stateTime = 0.f;
+
+        shapeRenderer = new ShapeRenderer();
     }
 
     @Override
@@ -48,6 +47,8 @@ public class AgentSlug extends Game {
         renderCharacter();
         renderScore();
         batch.end();
+
+        renderCharacterRectangle();
     }
 
     private void renderBackground() {
@@ -56,47 +57,19 @@ public class AgentSlug extends Game {
 
     private void updateGameState(float deltaTime) {
         stateTime += deltaTime;
-        velocityY += GRAVITY;
 
-        boolean isJumping = false;
-        boolean isFalling = false;
-        boolean isWalking = false;
+        characterManager.update(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isJumpPressed());
 
-        if (inputHandler.isJumpPressed() && characterManager.getMainCharacterY() == 0.f) {
-            velocityY = JUMP_SPEED;
-            isJumping = true;
-        }
-
-        if (velocityY < 0.f && characterManager.getMainCharacterY() > 0.f) {
-            isFalling = true;
-        }
-
-        float newMainCharacterY = characterManager.getMainCharacterY() - velocityY;
-        if (newMainCharacterY < 0.f) {
-            newMainCharacterY = 0.f;
-            velocityY = 0;
-            isFalling = false;
-            isJumping = false;
-        }
-        characterManager.setMainCharacterY(newMainCharacterY);
-
-        if (inputHandler.isLeftPressed()) {
-            moveCharacterLeft(deltaTime);
-            isWalking = true;
-        } else if (inputHandler.isRightPressed()) {
-            moveCharacterRight(deltaTime);
-            isWalking = true;
-        }
-
-        characterManager.update(deltaTime, isWalking, isJumping, isFalling);
-        mainCharacterRectangle = characterManager.getMainCharacterRectangle();
+        // Log character's state for debugging
+        Gdx.app.log("Character Y", String.valueOf(characterManager.getMainCharacter()));
+        Gdx.app.log("Velocity ", String.valueOf(characterManager.getVelocity()));
     }
 
     private void renderCharacter() {
         batch.draw(
             characterManager.getCurrentFrame(),
-            characterManager.getMainCharacterX(),
-            characterManager.getMainCharacterY(),
+            characterManager.getMainCharacter().x,
+            characterManager.getMainCharacter().y,
             64 * SCALE, 64 * SCALE
         );
     }
@@ -105,33 +78,29 @@ public class AgentSlug extends Game {
         textToShow.draw(batch, String.valueOf(score), 100, 200);
     }
 
+    private void renderCharacterRectangle() {
+        Rectangle characterRect = characterManager.getMainCharacterRectangle();
+
+        shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(characterRect.x, characterRect.y, characterRect.width, characterRect.height);
+        shapeRenderer.end();
+    }
+
+
     @Override
     public void dispose() {
         batch.dispose();
         background.dispose();
         characterManager.dispose();
         textToShow.dispose();
+        shapeRenderer.dispose();
     }
 
     private void createTextToShow() {
         textToShow = new BitmapFont();
         textToShow.setColor(Color.WHITE);
         textToShow.getData().setScale(10);
-    }
-
-    private void moveCharacterLeft(float deltaTime) {
-        float newMainCharacterX = characterManager.getMainCharacterX() - MOVE_SPEED * deltaTime;
-        if (newMainCharacterX > 0) {
-            characterManager.setMainCharacterX(newMainCharacterX);
-            characterManager.setFacingRight(false);
-        }
-    }
-
-    private void moveCharacterRight(float deltaTime) {
-        float newMainCharacterX = characterManager.getMainCharacterX() + MOVE_SPEED * deltaTime;
-        if (newMainCharacterX < Gdx.graphics.getWidth() - characterManager.getCurrentFrame().getRegionWidth()) {
-            characterManager.setMainCharacterX(newMainCharacterX);
-            characterManager.setFacingRight(true);
-        }
     }
 }

@@ -17,13 +17,11 @@ public class AnimationSetAgent {
 
     public AnimationSetAgent(Texture spriteSheet) {
         TextureRegion[][] textureRegions = TextureRegion.split(spriteSheet, FRAME_WIDTH, FRAME_HEIGHT);
-
-        // Initialize frames
         idleFrames = setupFrames(textureRegions, 0, 5);
         walkFrames = setupFrames(textureRegions, 11, 8);
         runFrames = setupFrames(textureRegions, 18, 5);
-        fallingFrames = setupFrames(textureRegions, 26, 5);  // Example indices
-        jumpingFrames = setupFrames(textureRegions, 22, 5);  // Example indices
+        fallingFrames = setupFrames(textureRegions, 25, 5);
+        jumpingFrames = setupFrames(textureRegions, 22, 5);
     }
 
     private TextureRegion[] setupFrames(TextureRegion[][] textureRegions, int row, int count) {
