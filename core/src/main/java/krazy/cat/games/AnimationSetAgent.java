@@ -27,16 +27,33 @@ public class AnimationSetAgent {
         animations.put(AnimationType.RUN, createAnimation(textureRegions, 18, 5));
         animations.put(AnimationType.FALLING, createAnimation(textureRegions, 25, 5));
         animations.put(AnimationType.JUMPING, createAnimation(textureRegions, 22, 5));
+
+        // Debug: Check that all animations are created
+        for (AnimationType type : AnimationType.values()) {
+            if (animations.get(type) == null) {
+                System.err.println("Animation " + type + " is null");
+            } else {
+                System.out.println("Animation " + type + " created successfully");
+            }
+        }
     }
 
     private Animation<TextureRegion> createAnimation(TextureRegion[][] textureRegions, int row, int count) {
+        if (row >= textureRegions.length || count > textureRegions[row].length) {
+            System.err.println("Error: Frame extraction out of bounds. Row: " + row + ", Count: " + count);
+            return null;
+        }
         TextureRegion[] frames = new TextureRegion[count];
         System.arraycopy(textureRegions[row], 0, frames, 0, count);
         return new Animation<>(FRAME_DURATION, frames);
     }
 
     public TextureRegion getFrame(AnimationType type, float stateTime, boolean looping) {
-        return animations.get(type).getKeyFrame(stateTime, looping);
+        Animation<TextureRegion> animation = animations.get(type);
+        if (animation == null) {
+            throw new IllegalStateException("Animation " + type + " not found");
+        }
+        return animation.getKeyFrame(stateTime, looping);
     }
 
     public void flipFramesHorizontally() {

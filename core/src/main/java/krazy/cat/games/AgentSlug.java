@@ -9,6 +9,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AgentSlug extends Game {
     public static final int SCALE = 5;
 
@@ -24,6 +27,8 @@ public class AgentSlug extends Game {
     private InputHandler inputHandler;
     private ShapeRenderer shapeRenderer;
 
+    private List<Rectangle> platforms;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -37,6 +42,8 @@ public class AgentSlug extends Game {
         stateTime = 0.f;
 
         shapeRenderer = new ShapeRenderer();
+
+        createPlatforms();
     }
 
     @Override
@@ -49,6 +56,7 @@ public class AgentSlug extends Game {
         batch.end();
 
         renderCharacterRectangle();
+        renderPlatforms();
     }
 
     private void renderBackground() {
@@ -58,7 +66,7 @@ public class AgentSlug extends Game {
     private void updateGameState(float deltaTime) {
         stateTime += deltaTime;
 
-        characterManager.update(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isJumpPressed());
+        characterManager.update(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isJumpPressed(), platforms);
 
         // Log character's state for debugging
         Gdx.app.log("Character Y", String.valueOf(characterManager.getMainCharacter()));
@@ -88,6 +96,24 @@ public class AgentSlug extends Game {
         shapeRenderer.end();
     }
 
+    private void renderPlatforms() {
+        shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.BROWN);
+        for (Rectangle platform : platforms) {
+            shapeRenderer.rect(platform.x, platform.y, platform.width, platform.height);
+        }
+        shapeRenderer.end();
+    }
+
+    private void createPlatforms() {
+        platforms = new ArrayList<>();
+        platforms.add(new Rectangle(100, 150, 200, 20));  // Platform 1
+        platforms.add(new Rectangle(400, 300, 200, 20));  // Platform 2
+        platforms.add(new Rectangle(700, 450, 200, 20));  // Platform 3
+        // Add more platforms as needed
+    }
 
     @Override
     public void dispose() {

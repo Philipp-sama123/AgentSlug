@@ -5,6 +5,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+
+import java.util.List;
+
 import krazy.cat.games.AnimationSetAgent.AnimationType;
 
 public class CharacterManager {
@@ -13,31 +16,22 @@ public class CharacterManager {
     public static final float GRAVITY = -1000.f;
 
     private final AnimationSetAgent animationSetAgent;
-    private Vector2 mainCharacter;
-    private float stateTime;
-    private boolean isWalking;
-    private boolean facingRight;
-    private boolean isJumping;
-    private boolean isFalling;
-    private Vector2 velocity;
+    private Vector2 mainCharacter = new Vector2();
+    private Vector2 velocity = new Vector2();
+    private float stateTime = 0f;
+    ;
+    private boolean facingRight = false;
+    private AnimationType currentState = AnimationType.IDLE;
 
     public CharacterManager(Texture spriteSheet) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
-        mainCharacter = new Vector2();
-        velocity = new Vector2();
         resetCharacterPosition();
-        facingRight = false;
     }
 
     public void resetCharacterPosition() {
-        mainCharacter.set(
-            Gdx.graphics.getWidth() / 2f - (getCurrentFrame() != null ? getCurrentFrame().getRegionWidth() / 2f : 0f),
-            Gdx.graphics.getHeight() / 2f
-        );
+        mainCharacter.set(Gdx.graphics.getWidth() / 2f - getCurrentFrameWidth() / 2f, Gdx.graphics.getHeight() / 2f);
         stateTime = 0f;
-        isWalking = false;
-        isJumping = false;
-        isFalling = false;
+        currentState = AnimationType.IDLE;
         velocity.set(0, 0);
     }
 
@@ -46,23 +40,8 @@ public class CharacterManager {
     }
 
     public TextureRegion getCurrentFrame() {
-        TextureRegion frame;
-        if (isJumping) {
-            frame = animationSetAgent.getFrame(AnimationType.JUMPING, stateTime, true);
-        } else if (isFalling) {
-            frame = animationSetAgent.getFrame(AnimationType.FALLING, stateTime, true);
-        } else if (isWalking) {
-            frame = animationSetAgent.getFrame(AnimationType.WALK, stateTime, true);
-        } else {
-            frame = animationSetAgent.getFrame(AnimationType.IDLE, stateTime, true);
-        }
-
-        if (facingRight && !animationSetAgent.isFlipped()) {
-            animationSetAgent.flipFramesHorizontally();
-        } else if (!facingRight && animationSetAgent.isFlipped()) {
-            animationSetAgent.flipFramesHorizontally();
-        }
-
+        TextureRegion frame = animationSetAgent.getFrame(currentState, stateTime, true);
+        adjustFrameOrientation(frame);
         return frame;
     }
 
@@ -78,37 +57,44 @@ public class CharacterManager {
         return velocity;
     }
 
-    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean jump) {
+    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean jump, List<Rectangle> platforms) {
         stateTime += deltaTime;
-        velocity.y += GRAVITY * deltaTime;
+        applyGravity(deltaTime);
 
-        if (jump && mainCharacter.y == 0.f) {
+        if (jump && canJump()) {
             velocity.y += JUMP_SPEED;
-        }
-        if (velocity.y > 0) {
-            isJumping = true;
-            isFalling = false;
-        } else if (velocity.y < 0.f) {
-            isJumping = false;
-            isFalling = true;
         }
 
         mainCharacter.y += velocity.y * deltaTime;
 
         if (mainCharacter.y < 0.f) {
-            mainCharacter.y = 0.f;
-            velocity.y = 0;
-            isFalling = false;
-            isJumping = false;
+            landOnGround();
         }
 
-        isWalking = false;
+        handlePlatformCollisions(platforms);
+        handleMovement(deltaTime, moveLeft, moveRight);
+        updateState(moveLeft, moveRight, jump);
+    }
+
+    private void applyGravity(float deltaTime) {
+        velocity.y += GRAVITY * deltaTime;
+    }
+
+    private boolean canJump() {
+        return currentState != AnimationType.JUMPING && currentState != AnimationType.FALLING;
+    }
+
+    private void landOnGround() {
+        mainCharacter.y = 0.f;
+        velocity.y = 0;
+        currentState = AnimationType.IDLE;
+    }
+
+    private void handleMovement(float deltaTime, boolean moveLeft, boolean moveRight) {
         if (moveLeft) {
             moveCharacterLeft(deltaTime);
-            isWalking = true;
         } else if (moveRight) {
             moveCharacterRight(deltaTime);
-            isWalking = true;
         }
     }
 
@@ -122,14 +108,61 @@ public class CharacterManager {
 
     private void moveCharacterRight(float deltaTime) {
         float newMainCharacterX = mainCharacter.x + MOVE_SPEED * deltaTime;
-        if (newMainCharacterX < Gdx.graphics.getWidth() - getCurrentFrame().getRegionWidth()) {
+        if (newMainCharacterX < Gdx.graphics.getWidth() - getCurrentFrameWidth()) {
             mainCharacter.x = newMainCharacterX;
             setFacingRight(true);
         }
     }
 
+    private void handlePlatformCollisions(List<Rectangle> platforms) {
+        Rectangle characterRect = getMainCharacterRectangle();
+        boolean isOnPlatform = false;
+
+        for (Rectangle platform : platforms) {
+            if (isCollidingWithPlatform(platform, characterRect)) {
+                landOnPlatform(platform);
+                isOnPlatform = true;
+                break;
+            }
+        }
+
+        if (!isOnPlatform && mainCharacter.y > 0.f && velocity.y < 0.f) {
+            currentState = AnimationType.FALLING;
+        }
+    }
+
+    private boolean isCollidingWithPlatform(Rectangle platform, Rectangle characterRect) {
+        float characterBottom = mainCharacter.y;
+        float platformTop = platform.y + platform.height;
+        float platformLeft = platform.x;
+        float platformRight = platform.x + platform.width;
+
+        return velocity.y <= 0 && characterRect.overlaps(platform) &&
+            characterBottom > platformTop - 5 &&
+            characterRect.x + characterRect.width / 2 > platformLeft &&
+            characterRect.x + characterRect.width / 2 < platformRight;
+    }
+
+    private void landOnPlatform(Rectangle platform) {
+        mainCharacter.y = platform.y + platform.height;
+        velocity.y = 0;
+    }
+
+    private void adjustFrameOrientation(TextureRegion frame) {
+        if (facingRight && !animationSetAgent.isFlipped()) {
+            animationSetAgent.flipFramesHorizontally();
+        } else if (!facingRight && animationSetAgent.isFlipped()) {
+            animationSetAgent.flipFramesHorizontally();
+        }
+    }
+
     public void setFacingRight(boolean facingRight) {
         this.facingRight = facingRight;
+    }
+
+    private float getCurrentFrameWidth() {
+        TextureRegion currentFrame = getCurrentFrame();
+        return currentFrame != null ? currentFrame.getRegionWidth() : 0;
     }
 
     public Rectangle getMainCharacterRectangle() {
@@ -142,13 +175,15 @@ public class CharacterManager {
         );
     }
 
-    public Rectangle getFullCharacterRectangle() {
-        TextureRegion currentFrame = getCurrentFrame();
-        return new Rectangle(
-            mainCharacter.x,
-            mainCharacter.y,
-            currentFrame.getRegionWidth() * AgentSlug.SCALE,
-            currentFrame.getRegionHeight() * AgentSlug.SCALE
-        );
+    private void updateState(boolean moveLeft, boolean moveRight, boolean jump) {
+        if (velocity.y > 0) {
+            currentState = AnimationType.JUMPING;
+        } else if (velocity.y < 0) {
+            currentState = AnimationType.FALLING;
+        } else if (moveLeft || moveRight) {
+            currentState = AnimationType.WALK;
+        } else {
+            currentState = AnimationType.IDLE;
+        }
     }
 }
