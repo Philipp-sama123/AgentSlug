@@ -5,14 +5,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import krazy.cat.games.AnimationSetAgent.AnimationType;
 
 public class CharacterManager {
     public static final float MOVE_SPEED = 200.f;
-    public static final float JUMP_SPEED = 1000.f; // Positive jump speed
-    public static final float GRAVITY = -1000.f; // Negative gravity to pull the character down
+    public static final float JUMP_SPEED = 1000.f;
+    public static final float GRAVITY = -1000.f;
 
     private final AnimationSetAgent animationSetAgent;
-    private Vector2 mainCharacter; // Position of the character
+    private Vector2 mainCharacter;
     private float stateTime;
     private boolean isWalking;
     private boolean facingRight;
@@ -25,7 +26,7 @@ public class CharacterManager {
         mainCharacter = new Vector2();
         velocity = new Vector2();
         resetCharacterPosition();
-        facingRight = false; // Character starts facing left
+        facingRight = false;
     }
 
     public void resetCharacterPosition() {
@@ -47,16 +48,15 @@ public class CharacterManager {
     public TextureRegion getCurrentFrame() {
         TextureRegion frame;
         if (isJumping) {
-            frame = animationSetAgent.getJumpingFrame(stateTime);
+            frame = animationSetAgent.getFrame(AnimationType.JUMPING, stateTime, true);
         } else if (isFalling) {
-            frame = animationSetAgent.getFallingFrame(stateTime);
+            frame = animationSetAgent.getFrame(AnimationType.FALLING, stateTime, true);
         } else if (isWalking) {
-            frame = animationSetAgent.getWalkFrame(stateTime);
+            frame = animationSetAgent.getFrame(AnimationType.WALK, stateTime, true);
         } else {
-            frame = animationSetAgent.getIdleFrame(stateTime);
+            frame = animationSetAgent.getFrame(AnimationType.IDLE, stateTime, true);
         }
 
-        // Flip frames if necessary
         if (facingRight && !animationSetAgent.isFlipped()) {
             animationSetAgent.flipFramesHorizontally();
         } else if (!facingRight && animationSetAgent.isFlipped()) {
@@ -80,12 +80,11 @@ public class CharacterManager {
 
     public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean jump) {
         stateTime += deltaTime;
-        velocity.y += GRAVITY * deltaTime; // Apply gravity to velocity
+        velocity.y += GRAVITY * deltaTime;
 
         if (jump && mainCharacter.y == 0.f) {
-            velocity.y += JUMP_SPEED; // Set velocity for jump
+            velocity.y += JUMP_SPEED;
         }
-
         if (velocity.y > 0) {
             isJumping = true;
             isFalling = false;
@@ -94,9 +93,8 @@ public class CharacterManager {
             isFalling = true;
         }
 
-        mainCharacter.y += velocity.y * deltaTime; // Update character's vertical position
+        mainCharacter.y += velocity.y * deltaTime;
 
-        // Ensure the character doesn't fall below the ground
         if (mainCharacter.y < 0.f) {
             mainCharacter.y = 0.f;
             velocity.y = 0;
@@ -144,7 +142,6 @@ public class CharacterManager {
         );
     }
 
-    /*The whole character*/
     public Rectangle getFullCharacterRectangle() {
         TextureRegion currentFrame = getCurrentFrame();
         return new Rectangle(
@@ -154,5 +151,4 @@ public class CharacterManager {
             currentFrame.getRegionHeight() * AgentSlug.SCALE
         );
     }
-
 }
