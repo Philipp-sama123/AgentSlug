@@ -3,6 +3,7 @@ package krazy.cat.games;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ public class AnimationSetAgent {
     private static final int FRAME_HEIGHT = 64;
 
     public enum AnimationType {
-        IDLE, WALK, RUN, FALLING, JUMPING
+        IDLE, WALK, RUN, FALL_AIM, IDLE_RELOAD, STAND_AIM, STAND_SHOOT, STAND_AIM_UP, STAND_SHOOT_UP, CROUCH_IDLE, CROUCH_AIM, CROUCH_SHOOT, CROUCH_SHOOT_UP, CROUCH_AIM_UP, WALK_AIM, WALK_SHOOT, WALK_AIM_UP, WALK_SHOOT_UP, RUN_SHOOT_UP, RUN_AIM_UP, RUN_SHOOT, RUN_AIM, JUMP, JUMP_SHOOT, FALL, FALL_SHOOT, SLIDE, SLIDE_SHOOT, IDLE_CHARISMATIC, IDLE_BACK_VIEW, DEATH, JUMP_AIM
     }
 
     private final Map<AnimationType, Animation<TextureRegion>> animations;
@@ -23,10 +24,37 @@ public class AnimationSetAgent {
         animations = new EnumMap<>(AnimationType.class);
 
         animations.put(AnimationType.IDLE, createAnimation(textureRegions, 0, 5));
+        animations.put(AnimationType.IDLE_RELOAD, createAnimation(textureRegions, 1, 10));
+        animations.put(AnimationType.STAND_AIM, createAnimation(textureRegions, 2, 5));
+        animations.put(AnimationType.STAND_SHOOT, createAnimation(textureRegions, 3, 5));
+        animations.put(AnimationType.STAND_AIM_UP, createAnimation(textureRegions, 4, 5));
+        animations.put(AnimationType.STAND_SHOOT_UP, createAnimation(textureRegions, 5, 5));
+        animations.put(AnimationType.CROUCH_IDLE, createAnimation(textureRegions, 6, 5));
+        animations.put(AnimationType.CROUCH_AIM, createAnimation(textureRegions, 7, 5));
+        animations.put(AnimationType.CROUCH_SHOOT, createAnimation(textureRegions, 8, 5));
+        animations.put(AnimationType.CROUCH_AIM_UP, createAnimation(textureRegions, 9, 5));
+        animations.put(AnimationType.CROUCH_SHOOT_UP, createAnimation(textureRegions, 10, 5));
         animations.put(AnimationType.WALK, createAnimation(textureRegions, 11, 8));
-        animations.put(AnimationType.RUN, createAnimation(textureRegions, 18, 5));
-        animations.put(AnimationType.FALLING, createAnimation(textureRegions, 25, 5));
-        animations.put(AnimationType.JUMPING, createAnimation(textureRegions, 22, 5));
+        animations.put(AnimationType.WALK_AIM, createAnimation(textureRegions, 12, 8));
+        animations.put(AnimationType.WALK_SHOOT, createAnimation(textureRegions, 13, 8));
+        animations.put(AnimationType.WALK_AIM_UP, createAnimation(textureRegions, 14, 8));
+        animations.put(AnimationType.WALK_SHOOT_UP, createAnimation(textureRegions, 15, 8));
+        animations.put(AnimationType.RUN, createAnimation(textureRegions, 16, 8));
+        animations.put(AnimationType.RUN_AIM, createAnimation(textureRegions, 17, 8));
+        animations.put(AnimationType.RUN_SHOOT, createAnimation(textureRegions, 18, 8));
+        animations.put(AnimationType.RUN_AIM_UP, createAnimation(textureRegions, 19, 8));
+        animations.put(AnimationType.RUN_SHOOT_UP, createAnimation(textureRegions, 20, 8));
+        animations.put(AnimationType.JUMP, createAnimation(textureRegions, 21, 5));
+        animations.put(AnimationType.JUMP_AIM, createAnimation(textureRegions, 22, 5));
+        animations.put(AnimationType.JUMP_SHOOT, createAnimation(textureRegions, 23, 5));
+        animations.put(AnimationType.FALL, createAnimation(textureRegions, 24, 5));
+        animations.put(AnimationType.FALL_AIM, createAnimation(textureRegions, 25, 5));
+        animations.put(AnimationType.FALL_SHOOT, createAnimation(textureRegions, 26, 5));
+        animations.put(AnimationType.SLIDE, createAnimation(textureRegions, 27, 5));
+        animations.put(AnimationType.SLIDE_SHOOT, createAnimation(textureRegions, 28, 5));
+        animations.put(AnimationType.IDLE_CHARISMATIC, createAnimation(textureRegions, 29, 5));
+        animations.put(AnimationType.IDLE_BACK_VIEW, createAnimation(textureRegions, 30, 5));
+        animations.put(AnimationType.DEATH, createAnimation(textureRegions, 31, 12));
 
         // Debug: Check that all animations are created
         for (AnimationType type : AnimationType.values()) {

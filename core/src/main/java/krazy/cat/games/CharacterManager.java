@@ -73,7 +73,7 @@ public class CharacterManager {
 
         handlePlatformCollisions(platforms);
         handleMovement(deltaTime, moveLeft, moveRight);
-        updateState(moveLeft, moveRight, jump);
+        updateState(moveLeft, moveRight);
     }
 
     private void applyGravity(float deltaTime) {
@@ -81,7 +81,7 @@ public class CharacterManager {
     }
 
     private boolean canJump() {
-        return currentState != AnimationType.JUMPING && currentState != AnimationType.FALLING;
+        return currentState != AnimationType.JUMP_AIM && currentState != AnimationType.FALL_AIM;
     }
 
     private void landOnGround() {
@@ -127,22 +127,24 @@ public class CharacterManager {
         }
 
         if (!isOnPlatform && mainCharacter.y > 0.f && velocity.y < 0.f) {
-            currentState = AnimationType.FALLING;
+            currentState = AnimationType.FALL_AIM;
         }
     }
-
     private boolean isCollidingWithPlatform(Rectangle platform, Rectangle characterRect) {
         float characterBottom = mainCharacter.y;
         float platformTop = platform.y + platform.height;
         float platformLeft = platform.x;
         float platformRight = platform.x + platform.width;
+        float characterLeft = characterRect.x;
+        float characterRight = characterRect.x + characterRect.width;
 
-        return velocity.y <= 0 && characterRect.overlaps(platform) &&
-            characterBottom > platformTop - 5 &&
-            characterRect.x + characterRect.width / 2 > platformLeft &&
-            characterRect.x + characterRect.width / 2 < platformRight;
+        boolean isFalling = velocity.y <= 0;
+        boolean isAbovePlatform = characterBottom > platformTop -15;
+        boolean isWithinHorizontalBounds = (characterLeft >= platformLeft && characterLeft <= platformRight) ||
+            (characterRight >= platformLeft && characterRight <= platformRight);
+
+        return isFalling && isAbovePlatform && isWithinHorizontalBounds && characterRect.overlaps(platform);
     }
-
     private void landOnPlatform(Rectangle platform) {
         mainCharacter.y = platform.y + platform.height;
         velocity.y = 0;
@@ -175,15 +177,15 @@ public class CharacterManager {
         );
     }
 
-    private void updateState(boolean moveLeft, boolean moveRight, boolean jump) {
+    private void updateState(boolean moveLeft, boolean moveRight) {
         if (velocity.y > 0) {
-            currentState = AnimationType.JUMPING;
+            currentState = AnimationType.JUMP_AIM;
         } else if (velocity.y < 0) {
-            currentState = AnimationType.FALLING;
+            currentState = AnimationType.FALL_AIM;
         } else if (moveLeft || moveRight) {
-            currentState = AnimationType.WALK;
+            currentState = AnimationType.WALK_AIM;
         } else {
-            currentState = AnimationType.IDLE;
+            currentState = AnimationType.IDLE;;
         }
     }
 }
