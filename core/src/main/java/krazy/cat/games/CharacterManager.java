@@ -202,10 +202,16 @@ public class CharacterManager {
     }
 
     private void shoot() {
-        Vector2 bulletPosition = new Vector2(mainCharacter.x + (facingRight ? 1 : -1) * 64 * AgentSlug.SCALE, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2);
+        float bulletOffsetY = 100; // Adding an offset of 50 to the top
+        float bulletOffsetX = facingRight ? 64 * AgentSlug.SCALE - 50 : -64 * AgentSlug.SCALE + 275; // Different x starting positions depending on the direction
+
+        Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
         Bullet bullet = new Bullet(bulletPosition, facingRight, bulletTexture);
         bullets.add(bullet);
+        currentState = AnimationType.STAND_SHOOT;
+        stateTime = 0f; // Reset state time to start animation from the beginning
     }
+
 
     private void updateBullets(float deltaTime) {
         Iterator<Bullet> bulletIterator = bullets.iterator();
