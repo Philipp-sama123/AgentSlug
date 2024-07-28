@@ -11,7 +11,8 @@ import java.util.List;
 import krazy.cat.games.AnimationSetAgent.AnimationType;
 
 public class CharacterManager {
-    public static final float MOVE_SPEED = 200.f;
+    public static final float MOVE_SPEED = 100.f;
+    public static final float RUN_SPEED = 250.f;
     public static final float JUMP_SPEED = 1000.f;
     public static final float GRAVITY = -1000.f;
 
@@ -19,7 +20,6 @@ public class CharacterManager {
     private Vector2 mainCharacter = new Vector2();
     private Vector2 velocity = new Vector2();
     private float stateTime = 0f;
-    ;
     private boolean facingRight = false;
     private AnimationType currentState = AnimationType.IDLE;
 
@@ -57,7 +57,7 @@ public class CharacterManager {
         return velocity;
     }
 
-    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean jump, List<Rectangle> platforms) {
+    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack, boolean jump, List<Rectangle> platforms) {
         stateTime += deltaTime;
         applyGravity(deltaTime);
 
@@ -72,8 +72,8 @@ public class CharacterManager {
         }
 
         handlePlatformCollisions(platforms);
-        handleMovement(deltaTime, moveLeft, moveRight);
-        updateState(moveLeft, moveRight);
+        handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
+        updateState(moveLeft, moveRight, runLeft, runRight);
     }
 
     private void applyGravity(float deltaTime) {
@@ -81,7 +81,7 @@ public class CharacterManager {
     }
 
     private boolean canJump() {
-        return currentState != AnimationType.JUMP_AIM && currentState != AnimationType.FALL_AIM;
+        return currentState != AnimationType.JUMP && currentState != AnimationType.FALL;
     }
 
     private void landOnGround() {
@@ -90,24 +90,24 @@ public class CharacterManager {
         currentState = AnimationType.IDLE;
     }
 
-    private void handleMovement(float deltaTime, boolean moveLeft, boolean moveRight) {
-        if (moveLeft) {
-            moveCharacterLeft(deltaTime);
-        } else if (moveRight) {
-            moveCharacterRight(deltaTime);
+    private void handleMovement(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
+        if (moveLeft || runLeft) {
+            moveCharacterLeft(deltaTime, runLeft);
+        } else if (moveRight || runRight) {
+            moveCharacterRight(deltaTime, runRight);
         }
     }
 
-    private void moveCharacterLeft(float deltaTime) {
-        float newMainCharacterX = mainCharacter.x - MOVE_SPEED * deltaTime;
+    private void moveCharacterLeft(float deltaTime, boolean isRunning) {
+        float newMainCharacterX = mainCharacter.x - (isRunning ? RUN_SPEED : MOVE_SPEED) * deltaTime;
         if (newMainCharacterX > 0) {
             mainCharacter.x = newMainCharacterX;
             setFacingRight(false);
         }
     }
 
-    private void moveCharacterRight(float deltaTime) {
-        float newMainCharacterX = mainCharacter.x + MOVE_SPEED * deltaTime;
+    private void moveCharacterRight(float deltaTime, boolean isRunning) {
+        float newMainCharacterX = mainCharacter.x + (isRunning ? RUN_SPEED : MOVE_SPEED) * deltaTime;
         if (newMainCharacterX < Gdx.graphics.getWidth() - getCurrentFrameWidth()) {
             mainCharacter.x = newMainCharacterX;
             setFacingRight(true);
@@ -127,11 +127,12 @@ public class CharacterManager {
         }
 
         if (!isOnPlatform && mainCharacter.y > 0.f && velocity.y < 0.f) {
-            currentState = AnimationType.FALL_AIM;
+            currentState = AnimationType.FALL;
         }
     }
+
     private boolean isCollidingWithPlatform(Rectangle platform, Rectangle characterRect) {
-        float characterBottom = mainCharacter.y;
+        float characterBottom = characterRect.y;
         float platformTop = platform.y + platform.height;
         float platformLeft = platform.x;
         float platformRight = platform.x + platform.width;
@@ -139,12 +140,12 @@ public class CharacterManager {
         float characterRight = characterRect.x + characterRect.width;
 
         boolean isFalling = velocity.y <= 0;
-        boolean isAbovePlatform = characterBottom > platformTop -15;
-        boolean isWithinHorizontalBounds = (characterLeft >= platformLeft && characterLeft <= platformRight) ||
-            (characterRight >= platformLeft && characterRight <= platformRight);
+        boolean isAbovePlatform = characterBottom > platformTop - 15;
+        boolean isWithinHorizontalBounds = (characterLeft >= platformLeft && characterLeft <= platformRight) || (characterRight >= platformLeft && characterRight <= platformRight);
 
         return isFalling && isAbovePlatform && isWithinHorizontalBounds && characterRect.overlaps(platform);
     }
+
     private void landOnPlatform(Rectangle platform) {
         mainCharacter.y = platform.y + platform.height;
         velocity.y = 0;
@@ -169,23 +170,20 @@ public class CharacterManager {
 
     public Rectangle getMainCharacterRectangle() {
         TextureRegion currentFrame = getCurrentFrame();
-        return new Rectangle(
-            facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150,
-            mainCharacter.y,
-            currentFrame.getRegionWidth() * AgentSlug.SCALE - 250,
-            currentFrame.getRegionHeight() * AgentSlug.SCALE - 100
-        );
+        return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * AgentSlug.SCALE - 250, currentFrame.getRegionHeight() * AgentSlug.SCALE - 100);
     }
 
-    private void updateState(boolean moveLeft, boolean moveRight) {
+    private void updateState(boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
         if (velocity.y > 0) {
-            currentState = AnimationType.JUMP_AIM;
+            currentState = AnimationType.JUMP;
         } else if (velocity.y < 0) {
-            currentState = AnimationType.FALL_AIM;
+            currentState = AnimationType.FALL;
         } else if (moveLeft || moveRight) {
-            currentState = AnimationType.WALK_AIM;
+            currentState = AnimationType.WALK;
+        } else if (runLeft || runRight) {
+            currentState = AnimationType.RUN;
         } else {
-            currentState = AnimationType.IDLE;;
+            currentState = AnimationType.IDLE;
         }
     }
 }

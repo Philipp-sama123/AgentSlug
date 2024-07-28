@@ -66,7 +66,7 @@ public class AgentSlug extends Game {
     private void updateGameState(float deltaTime) {
         stateTime += deltaTime;
 
-        characterManager.update(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isJumpPressed(), platforms);
+        characterManager.update(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isRunLeftPressed(), inputHandler.isRunRightPressed(), inputHandler.isAttackPressed(), inputHandler.isJumpPressed(), platforms);
 
         // Log character's state for debugging
         Gdx.app.log("Character Y", String.valueOf(characterManager.getMainCharacter()));
@@ -74,12 +74,7 @@ public class AgentSlug extends Game {
     }
 
     private void renderCharacter() {
-        batch.draw(
-            characterManager.getCurrentFrame(),
-            characterManager.getMainCharacter().x,
-            characterManager.getMainCharacter().y,
-            64 * SCALE, 64 * SCALE
-        );
+        batch.draw(characterManager.getCurrentFrame(), characterManager.getMainCharacter().x, characterManager.getMainCharacter().y, 64 * SCALE, 64 * SCALE);
     }
 
     private void renderScore() {
