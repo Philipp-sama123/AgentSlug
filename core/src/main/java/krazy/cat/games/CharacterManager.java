@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import krazy.cat.games.AnimationSetAgent.AnimationType;
@@ -23,9 +25,14 @@ public class CharacterManager {
     private boolean facingRight = false;
     private AnimationType currentState = AnimationType.IDLE;
 
-    public CharacterManager(Texture spriteSheet) {
+    private List<Bullet> bullets;
+    private Texture bulletTexture;
+
+    public CharacterManager(Texture spriteSheet, Texture bulletTexture) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
+        this.bulletTexture = bulletTexture;
         resetCharacterPosition();
+        bullets = new ArrayList<>();
     }
 
     public void resetCharacterPosition() {
@@ -37,6 +44,7 @@ public class CharacterManager {
 
     public void dispose() {
         animationSetAgent.dispose();
+        bulletTexture.dispose();
     }
 
     public TextureRegion getCurrentFrame() {
@@ -74,6 +82,12 @@ public class CharacterManager {
         handlePlatformCollisions(platforms);
         handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
         updateState(moveLeft, moveRight, runLeft, runRight);
+
+        if (attack) {
+            shoot();
+        }
+
+        updateBullets(deltaTime);
     }
 
     private void applyGravity(float deltaTime) {
@@ -185,5 +199,26 @@ public class CharacterManager {
         } else {
             currentState = AnimationType.IDLE;
         }
+    }
+
+    private void shoot() {
+        Vector2 bulletPosition = new Vector2(mainCharacter.x + (facingRight ? 1 : -1) * 64 * AgentSlug.SCALE, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2);
+        Bullet bullet = new Bullet(bulletPosition, facingRight, bulletTexture);
+        bullets.add(bullet);
+    }
+
+    private void updateBullets(float deltaTime) {
+        Iterator<Bullet> bulletIterator = bullets.iterator();
+        while (bulletIterator.hasNext()) {
+            Bullet bullet = bulletIterator.next();
+            bullet.update(deltaTime);
+            if (bullet.getPosition().x < 0 || bullet.getPosition().x > Gdx.graphics.getWidth()) {
+                bulletIterator.remove();
+            }
+        }
+    }
+
+    public List<Bullet> getBullets() {
+        return bullets;
     }
 }

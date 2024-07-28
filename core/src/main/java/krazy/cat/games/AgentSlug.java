@@ -34,7 +34,9 @@ public class AgentSlug extends Game {
         batch = new SpriteBatch();
         background = new Texture("bg.png");
 
-        characterManager = new CharacterManager(new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png"));
+        Texture characterTexture = new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png");
+        Texture bulletTexture = new Texture("Pixel Bullet 16x16.png");
+        characterManager = new CharacterManager(characterTexture, bulletTexture);
         createTextToShow();
 
         inputHandler = new InputHandler(this);
@@ -52,6 +54,7 @@ public class AgentSlug extends Game {
         renderBackground();
         updateGameState(Gdx.graphics.getDeltaTime());
         renderCharacter();
+        renderBullets();
         renderScore();
         batch.end();
 
@@ -75,6 +78,12 @@ public class AgentSlug extends Game {
 
     private void renderCharacter() {
         batch.draw(characterManager.getCurrentFrame(), characterManager.getMainCharacter().x, characterManager.getMainCharacter().y, 64 * SCALE, 64 * SCALE);
+    }
+
+    private void renderBullets() {
+        for (Bullet bullet : characterManager.getBullets()) {
+            batch.draw(bullet.getCurrentFrame(), bullet.getPosition().x, bullet.getPosition().y, Bullet.BULLET_WIDTH * SCALE, Bullet.BULLET_HEIGHT * SCALE);
+        }
     }
 
     private void renderScore() {
