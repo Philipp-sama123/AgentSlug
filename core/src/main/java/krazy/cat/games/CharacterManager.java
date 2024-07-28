@@ -25,7 +25,7 @@ public class CharacterManager {
     private float stateTime = 0f;
     private boolean facingRight = false;
     private AnimationType currentState = AnimationType.IDLE;
-    private boolean shooting = false; // Add this line
+    private boolean shooting = false;
 
     private List<Bullet> bullets;
     private Texture bulletTexture;
@@ -42,6 +42,7 @@ public class CharacterManager {
         stateTime = 0f;
         currentState = AnimationType.IDLE;
         velocity.set(0, 0);
+        shooting = false; // Ensure shooting flag is reset
     }
 
     public void dispose() {
@@ -87,7 +88,6 @@ public class CharacterManager {
         // If attacking, handle shooting and set shooting flag
         if (attack && !shooting) {
             shoot();
-            shooting = true;
         }
 
         updateState(moveLeft, moveRight, runLeft, runRight);
@@ -109,7 +109,9 @@ public class CharacterManager {
     private void landOnGround() {
         mainCharacter.y = 0.f;
         velocity.y = 0;
-        currentState = AnimationType.IDLE;
+        if (!shooting) { // Ensure we only set to IDLE if not shooting
+            currentState = AnimationType.IDLE;
+        }
     }
 
     private void handleMovement(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
@@ -149,7 +151,9 @@ public class CharacterManager {
         }
 
         if (!isOnPlatform && mainCharacter.y > 0.f && velocity.y < 0.f) {
-            currentState = AnimationType.FALL;
+            if (!shooting) {
+                currentState = AnimationType.FALL;
+            }
         }
     }
 
@@ -196,14 +200,6 @@ public class CharacterManager {
     }
 
     private void updateState(boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
-        if (shooting) {
-            // Check if the shooting animation has finished
-            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentState);
-            if (shootAnimation.isAnimationFinished(stateTime)) {
-                shooting = false;
-                stateTime = 0f;
-            }
-        }
         if (velocity.y > 0) {
             currentState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
         } else if (velocity.y < 0) {
@@ -215,6 +211,15 @@ public class CharacterManager {
         } else {
             currentState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
         }
+
+        if (shooting) {
+            // Check if the shooting animation has finished
+            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentState);
+            if (shootAnimation.isAnimationFinished(stateTime)) {
+                shooting = false;
+                stateTime = 0f;
+            }
+        }
     }
 
     private void shoot() {
@@ -224,7 +229,7 @@ public class CharacterManager {
         Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
         Bullet bullet = new Bullet(bulletPosition, facingRight, bulletTexture);
         bullets.add(bullet);
-        //   currentState = AnimationType.STAND_SHOOT;
+        shooting = true; // Ensure shooting flag is set
         stateTime = 0f; // Reset state time to start animation from the beginning
     }
 
