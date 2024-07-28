@@ -84,6 +84,13 @@ public class AnimationSetAgent {
         return animation.getKeyFrame(stateTime, looping);
     }
 
+    public Animation<TextureRegion> getAnimation(AnimationType type) {
+        Animation<TextureRegion> animation = animations.get(type);
+        if (animation == null) {
+            throw new IllegalStateException("Animation " + type + " not found");
+        }
+        return animation;
+    }
     public void flipFramesHorizontally() {
         for (Animation<TextureRegion> animation : animations.values()) {
             for (TextureRegion frame : animation.getKeyFrames()) {

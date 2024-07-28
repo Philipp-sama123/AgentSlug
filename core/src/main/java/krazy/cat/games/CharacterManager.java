@@ -2,6 +2,7 @@ package krazy.cat.games;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -24,6 +25,7 @@ public class CharacterManager {
     private float stateTime = 0f;
     private boolean facingRight = false;
     private AnimationType currentState = AnimationType.IDLE;
+    private boolean shooting = false; // Add this line
 
     private List<Bullet> bullets;
     private Texture bulletTexture;
@@ -81,11 +83,14 @@ public class CharacterManager {
 
         handlePlatformCollisions(platforms);
         handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
-        updateState(moveLeft, moveRight, runLeft, runRight);
 
-        if (attack) {
+        // If attacking, handle shooting and set shooting flag
+        if (attack && !shooting) {
             shoot();
+            shooting = true;
         }
+
+        updateState(moveLeft, moveRight, runLeft, runRight);
 
         updateBullets(deltaTime);
     }
@@ -95,7 +100,10 @@ public class CharacterManager {
     }
 
     private boolean canJump() {
-        return currentState != AnimationType.JUMP && currentState != AnimationType.FALL;
+        return currentState != AnimationType.JUMP
+            && currentState != AnimationType.FALL
+            && currentState != AnimationType.FALL_SHOOT
+            && currentState != AnimationType.JUMP_SHOOT;
     }
 
     private void landOnGround() {
@@ -188,30 +196,37 @@ public class CharacterManager {
     }
 
     private void updateState(boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
+        if (shooting) {
+            // Check if the shooting animation has finished
+            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentState);
+            if (shootAnimation.isAnimationFinished(stateTime)) {
+                shooting = false;
+                stateTime = 0f;
+            }
+        }
         if (velocity.y > 0) {
-            currentState = AnimationType.JUMP;
+            currentState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
         } else if (velocity.y < 0) {
-            currentState = AnimationType.FALL;
+            currentState = shooting ? AnimationType.FALL_SHOOT : AnimationType.FALL;
         } else if (moveLeft || moveRight) {
-            currentState = AnimationType.WALK;
+            currentState = shooting ? AnimationType.WALK_SHOOT : AnimationType.WALK;
         } else if (runLeft || runRight) {
-            currentState = AnimationType.RUN;
+            currentState = shooting ? AnimationType.RUN_SHOOT : AnimationType.RUN;
         } else {
-            currentState = AnimationType.IDLE;
+            currentState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
         }
     }
 
     private void shoot() {
-        float bulletOffsetY = 100; // Adding an offset of 50 to the top
+        float bulletOffsetY = 117.5f; // Adding an offset of 50 to the top
         float bulletOffsetX = facingRight ? 64 * AgentSlug.SCALE - 50 : -64 * AgentSlug.SCALE + 275; // Different x starting positions depending on the direction
 
         Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
         Bullet bullet = new Bullet(bulletPosition, facingRight, bulletTexture);
         bullets.add(bullet);
-        currentState = AnimationType.STAND_SHOOT;
+        //   currentState = AnimationType.STAND_SHOOT;
         stateTime = 0f; // Reset state time to start animation from the beginning
     }
-
 
     private void updateBullets(float deltaTime) {
         Iterator<Bullet> bulletIterator = bullets.iterator();
