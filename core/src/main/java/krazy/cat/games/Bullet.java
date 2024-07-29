@@ -24,6 +24,8 @@ public class Bullet {
         bulletFrames = new TextureRegion[5];
         for (int i = 0; i < 5; i++) {
             bulletFrames[i] = new TextureRegion(bulletTexture, i * BULLET_WIDTH, 0, BULLET_WIDTH, BULLET_HEIGHT);
+            if (facingRight)
+                bulletFrames[i].flip(true, true); // Flip horizontally and vertically for 180-degree rotation
         }
         currentFrameIndex = 0;
     }
