@@ -76,7 +76,7 @@ public class CharacterManager {
         return velocity;
     }
 
-    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack, boolean jump, List<Rectangle> platforms) {
+    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack, boolean jump, List<Rectangle> platforms, List<Rectangle> tiledRectangles) {
         stateTime += deltaTime;
         applyGravity(deltaTime);
 
@@ -92,6 +92,7 @@ public class CharacterManager {
         }
 
         handlePlatformCollisions(platforms);
+        handleTiledRectangleCollisions(tiledRectangles);
         handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
 
         if (attack && !shooting) {
@@ -102,7 +103,21 @@ public class CharacterManager {
         updateBullets(deltaTime);
         checkBulletCollisions();
     }
+    private void handleTiledRectangleCollisions(List<Rectangle> tiledRectangles) {
+        Rectangle characterRect = getMainCharacterRectangle();
 
+        for (Rectangle tiledRectangle : tiledRectangles) {
+            if (characterRect.overlaps(tiledRectangle)) {
+                // Handle collision with the tiled rectangle
+                // For example, stop movement or adjust position
+                if (velocity.y < 0) {
+                    mainCharacter.y = tiledRectangle.y + tiledRectangle.height;
+                    velocity.y = 0;
+                }
+                // You can also handle other collision effects here
+            }
+        }
+    }
     private void applyGravity(float deltaTime) {
         velocity.y += GRAVITY * deltaTime;
     }
