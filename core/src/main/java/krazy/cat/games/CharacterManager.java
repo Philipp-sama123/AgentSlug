@@ -1,6 +1,7 @@
 package krazy.cat.games;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -30,11 +31,18 @@ public class CharacterManager {
     private List<Bullet> bullets;
     private Texture bulletTexture;
 
+    private Sound jumpSound;
+    private Sound shootSound;
+    private Sound hitSound;
+
     public CharacterManager(Texture spriteSheet, Texture bulletTexture) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
         this.bulletTexture = bulletTexture;
         resetCharacterPosition();
         bullets = new ArrayList<>();
+        jumpSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Jump.wav"));
+        shootSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Shoot.wav"));
+        hitSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Hit.wav"));
     }
 
     public void resetCharacterPosition() {
@@ -74,6 +82,7 @@ public class CharacterManager {
 
         if (jump && canJump()) {
             velocity.y += JUMP_SPEED;
+            jumpSound.play();
         }
 
         mainCharacter.y += velocity.y * deltaTime;
@@ -229,6 +238,7 @@ public class CharacterManager {
         bullets.add(bullet);
         shooting = true; // Set shooting flag to true
         stateTime = 0f; // Reset state time to start animation from the beginning
+        shootSound.play();
     }
 
     private void updateBullets(float deltaTime) {
@@ -250,6 +260,7 @@ public class CharacterManager {
             Bullet bullet = bulletIterator.next();
             if (characterRect.overlaps(bullet.getBoundingRectangle())) {
                 bulletIterator.remove();
+                hitSound.play();
                 // Handle collision (e.g., reduce health, trigger an effect, etc.)
             }
         }
