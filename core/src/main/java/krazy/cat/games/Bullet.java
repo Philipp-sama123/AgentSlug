@@ -2,12 +2,13 @@ package krazy.cat.games;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class Bullet {
     public static final int BULLET_WIDTH = 16;
     public static final int BULLET_HEIGHT = 12;
-    private static final float BULLET_SPEED = 300;
+    private static final float BULLET_SPEED = 100;
 
     private Vector2 position;
     private Vector2 velocity;
@@ -43,5 +44,9 @@ public class Bullet {
 
     public TextureRegion getCurrentFrame() {
         return bulletFrames[currentFrameIndex];
+    }
+
+    public Rectangle getBoundingRectangle() {
+        return new Rectangle(position.x, position.y, BULLET_WIDTH, BULLET_HEIGHT);
     }
 }

@@ -42,7 +42,7 @@ public class CharacterManager {
         stateTime = 0f;
         currentState = AnimationType.IDLE;
         velocity.set(0, 0);
-        shooting = false; // Ensure shooting flag is reset
+        shooting = false;
     }
 
     public void dispose() {
@@ -85,14 +85,13 @@ public class CharacterManager {
         handlePlatformCollisions(platforms);
         handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
 
-        // If attacking, handle shooting and set shooting flag
         if (attack && !shooting) {
             shoot();
         }
 
         updateState(moveLeft, moveRight, runLeft, runRight);
-
         updateBullets(deltaTime);
+        checkBulletCollisions();
     }
 
     private void applyGravity(float deltaTime) {
@@ -109,7 +108,7 @@ public class CharacterManager {
     private void landOnGround() {
         mainCharacter.y = 0.f;
         velocity.y = 0;
-        if (!shooting) { // Ensure we only set to IDLE if not shooting
+        if (!shooting) {
             currentState = AnimationType.IDLE;
         }
     }
@@ -200,6 +199,14 @@ public class CharacterManager {
     }
 
     private void updateState(boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
+        if (shooting) {
+            // Check if the shooting animation has finished
+            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentState);
+            if (shootAnimation.isAnimationFinished(stateTime)) {
+                shooting = false;
+                stateTime = 0f;
+            }
+        }
         if (velocity.y > 0) {
             currentState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
         } else if (velocity.y < 0) {
@@ -211,15 +218,6 @@ public class CharacterManager {
         } else {
             currentState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
         }
-
-        if (shooting) {
-            // Check if the shooting animation has finished
-            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentState);
-            if (shootAnimation.isAnimationFinished(stateTime)) {
-                shooting = false;
-                stateTime = 0f;
-            }
-        }
     }
 
     private void shoot() {
@@ -229,7 +227,7 @@ public class CharacterManager {
         Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
         Bullet bullet = new Bullet(bulletPosition, facingRight, bulletTexture);
         bullets.add(bullet);
-        shooting = true; // Ensure shooting flag is set
+        shooting = true; // Set shooting flag to true
         stateTime = 0f; // Reset state time to start animation from the beginning
     }
 
@@ -240,6 +238,19 @@ public class CharacterManager {
             bullet.update(deltaTime);
             if (bullet.getPosition().x < 0 || bullet.getPosition().x > Gdx.graphics.getWidth()) {
                 bulletIterator.remove();
+            }
+        }
+    }
+
+    private void checkBulletCollisions() {
+        Rectangle characterRect = getMainCharacterRectangle();
+        Iterator<Bullet> bulletIterator = bullets.iterator();
+
+        while (bulletIterator.hasNext()) {
+            Bullet bullet = bulletIterator.next();
+            if (characterRect.overlaps(bullet.getBoundingRectangle())) {
+                bulletIterator.remove();
+                // Handle collision (e.g., reduce health, trigger an effect, etc.)
             }
         }
     }
