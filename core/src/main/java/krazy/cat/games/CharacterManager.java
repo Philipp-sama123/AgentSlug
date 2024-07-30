@@ -16,7 +16,7 @@ import krazy.cat.games.AnimationSetAgent.AnimationType;
 
 public class CharacterManager {
     public static final float MOVE_SPEED = 100.f;
-    public static final float RUN_SPEED = 250.f;
+    public static final float RUN_SPEED = 300.f;
     public static final float JUMP_SPEED = 1000.f;
     public static final float GRAVITY = -1000.f;
 
@@ -146,9 +146,9 @@ public class CharacterManager {
 
     private void handleMovement(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
         if (moveLeft || runLeft) {
-            moveCharacterLeft(deltaTime, runLeft || moveLeft);
+            moveCharacterLeft(deltaTime, runLeft);
         } else if (moveRight || runRight) {
-            moveCharacterRight(deltaTime, runRight || moveRight);
+            moveCharacterRight(deltaTime, runRight);
         }
     }
 
