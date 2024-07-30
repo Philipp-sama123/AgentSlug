@@ -218,9 +218,9 @@ public class CharacterManager {
         while (bulletIterator.hasNext()) {
             Bullet bullet = bulletIterator.next();
             bullet.update(deltaTime);
-            if (bullet.getPosition().x < 0 || bullet.getPosition().x > Gdx.graphics.getWidth()) {
-                bulletIterator.remove();
-            }
+//            if (bullet.getPosition().x < 0 || bullet.getPosition().x > Gdx.graphics.getWidth()) {
+//                bulletIterator.remove();
+//            }
         }
     }
 
