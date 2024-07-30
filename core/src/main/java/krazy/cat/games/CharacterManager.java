@@ -1,9 +1,12 @@
 package krazy.cat.games;
 
+import static krazy.cat.games.AgentSlug.SCALE;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -28,17 +31,12 @@ public class CharacterManager {
     private AnimationType currentAnimationState = AnimationType.IDLE;
     private boolean shooting = false;
 
-    private List<Bullet> bullets;
-    private Texture bulletTexture;
-
     private Sound jumpSound;
     private Sound shootSound;
     private Sound hitSound;
 
-    public CharacterManager(Texture spriteSheet, Texture bulletTexture) {
+    public CharacterManager(Texture spriteSheet) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
-        this.bulletTexture = bulletTexture;
-        bullets = new ArrayList<>();
         resetCharacterPosition();
         initializeSounds();
     }
@@ -59,7 +57,6 @@ public class CharacterManager {
 
     public void dispose() {
         animationSetAgent.dispose();
-        bulletTexture.dispose();
     }
 
     public TextureRegion getCurrentFrame() {
@@ -72,27 +69,44 @@ public class CharacterManager {
         return mainCharacter;
     }
 
-    public void setMainCharacter(Vector2 mainCharacter) {
-        this.mainCharacter = mainCharacter;
-    }
-
     public Vector2 getVelocity() {
         return velocity;
     }
 
-    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack, boolean jump, List<Rectangle> platforms, List<Rectangle> tiledRectangles) {
+    public void update(float deltaTime) {
         stateTime += deltaTime;
-
         applyGravity(deltaTime);
+    }
 
-        handleInput(deltaTime, moveLeft, moveRight, runLeft, runRight, jump, attack);
+    public void updateAnimationState() {
+        if (shooting) {
+            // Check if the shooting animation has finished
+            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentAnimationState);
+            if (shootAnimation.isAnimationFinished(stateTime)) {
+                shooting = false;
+                stateTime = 0f;
+            }
+        }
+        if (velocity.y > 0) {
+            currentAnimationState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
+        } else if (velocity.y < 0) {
+            currentAnimationState = shooting ? AnimationType.FALL_SHOOT : AnimationType.FALL;
+        } else if (velocity.x != 0) {
+            currentAnimationState = shooting ? (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN_SHOOT : AnimationType.WALK_SHOOT) : (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN : AnimationType.WALK);
+        } else {
+            currentAnimationState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
+        }
 
-        handleCollisions(platforms, tiledRectangles);
+        // Reset horizontal velocity after applying movement
+        velocity.x = 0;
+    }
 
-        updateAnimationState();
-        updateBullets(deltaTime);
-        checkBulletCollisions();
+    private void applyGravity(float deltaTime) {
+        velocity.y += GRAVITY * deltaTime;
 
+        if (mainCharacter.y < 0.f) {
+            landOnGround();
+        }
     }
 
     public void handleCollisions(List<Rectangle> platforms, List<Rectangle> rectangles) {
@@ -100,7 +114,7 @@ public class CharacterManager {
         handleRectangleCollisions(rectangles);
     }
 
-    public void handleRectangleCollisions(List<Rectangle> rectangles) {
+    private void handleRectangleCollisions(List<Rectangle> rectangles) {
         Rectangle characterRect = getMainCharacterRectangle();
 
         for (Rectangle rectangle : rectangles) {
@@ -113,19 +127,15 @@ public class CharacterManager {
         }
     }
 
-    private void applyGravity(float deltaTime) {
-        velocity.y += GRAVITY * deltaTime;
-
-        if (mainCharacter.y < 0.f) {
-            landOnGround();
-        }
-    }
-
     private boolean canJump() {
         return currentAnimationState != AnimationType.JUMP
             && currentAnimationState != AnimationType.FALL
             && currentAnimationState != AnimationType.FALL_SHOOT
             && currentAnimationState != AnimationType.JUMP_SHOOT;
+    }
+
+    public boolean isShooting() {
+        return shooting;
     }
 
     private void landOnGround() {
@@ -136,13 +146,8 @@ public class CharacterManager {
         }
     }
 
-    private void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean jump, boolean attack) {
+    public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean jump) {
         boolean isRunning = runLeft || runRight;
-
-        if (attack && !shooting) {
-            Bullet bullet = shoot();
-            bullets.add(bullet);
-        }
 
         if (jump && canJump()) {
             velocity.y += JUMP_SPEED;
@@ -180,57 +185,22 @@ public class CharacterManager {
 
     public Rectangle getMainCharacterRectangle() {
         TextureRegion currentFrame = getCurrentFrame();
-        return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * AgentSlug.SCALE - 250, currentFrame.getRegionHeight() * AgentSlug.SCALE - 100);
+        return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 250, currentFrame.getRegionHeight() * SCALE - 100);
     }
 
-    private void updateAnimationState() {
-        if (shooting) {
-            // Check if the shooting animation has finished
-            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentAnimationState);
-            if (shootAnimation.isAnimationFinished(stateTime)) {
-                shooting = false;
-                stateTime = 0f;
-            }
-        }
-        if (velocity.y > 0) {
-            currentAnimationState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
-        } else if (velocity.y < 0) {
-            currentAnimationState = shooting ? AnimationType.FALL_SHOOT : AnimationType.FALL;
-        } else if (velocity.x != 0) {
-            currentAnimationState = shooting ? (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN_SHOOT : AnimationType.WALK_SHOOT) : (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN : AnimationType.WALK);
-        } else {
-            currentAnimationState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
-        }
-
-        // Reset horizontal velocity after applying movement
-        velocity.x = 0;
-    }
-
-    private Bullet shoot() {
+    public Bullet shoot() {
         float bulletOffsetY = 117.5f; // Adding an offset of 50 to the top
-        float bulletOffsetX = facingRight ? 64 * AgentSlug.SCALE - 50 : -64 * AgentSlug.SCALE + 275; // Different x starting positions depending on the direction
+        float bulletOffsetX = facingRight ? 64 * SCALE - 50 : -64 * SCALE + 275; // Different x starting positions depending on the direction
 
         Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
-      //
         shooting = true; // Set shooting flag to true
         stateTime = 0f; // Reset state time to start animation from the beginning
         shootSound.play();
-        return new Bullet(bulletPosition, facingRight, bulletTexture);
+        return new Bullet(bulletPosition, facingRight);
 
     }
 
-    public void updateBullets(float deltaTime) {
-        Iterator<Bullet> bulletIterator = bullets.iterator();
-        while (bulletIterator.hasNext()) {
-            Bullet bullet = bulletIterator.next();
-            bullet.update(deltaTime);
-//            if (bullet.getPosition().x < 0 || bullet.getPosition().x > Gdx.graphics.getWidth()) {
-//                bulletIterator.remove();
-//            }
-        }
-    }
-
-    private void checkBulletCollisions() {
+    public void checkBulletCollisions(List<Bullet> bullets) {
         Rectangle characterRect = getMainCharacterRectangle();
         Iterator<Bullet> bulletIterator = bullets.iterator();
 
@@ -244,7 +214,9 @@ public class CharacterManager {
         }
     }
 
-    public List<Bullet> getBullets() {
-        return bullets;
+    public void renderCharacter(Batch batch) {
+        batch.draw(getCurrentFrame(), getMainCharacter().x, getMainCharacter().y,
+            64 * SCALE, 64 * SCALE);
+
     }
 }
