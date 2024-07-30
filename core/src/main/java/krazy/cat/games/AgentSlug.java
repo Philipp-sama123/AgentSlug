@@ -109,9 +109,9 @@ public class AgentSlug extends Game {
             Body body = world.createBody(bodyDef);
             PolygonShape shape = new PolygonShape();
             shape.set(new float[]{
-                triangle.p1.x, triangle.p1.y,
-                triangle.p2.x, triangle.p2.y,
-                triangle.p3.x, triangle.p3.y
+                triangle.v1.x, triangle.v1.y,
+                triangle.v2.x, triangle.v2.y,
+                triangle.v3.x, triangle.v3.y
             });
             FixtureDef fixtureDef = new FixtureDef();
             fixtureDef.shape = shape;
@@ -252,7 +252,7 @@ public class AgentSlug extends Game {
         stateTime += deltaTime;
         characterManager.update(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(),
             inputHandler.isRunLeftPressed(), inputHandler.isRunRightPressed(), inputHandler.isAttackPressed(),
-            inputHandler.isJumpPressed(), platforms, tiledRectangles);
+            inputHandler.isJumpPressed(), platforms, tiledRectangles, triangles);
 
         // Update the camera position to follow the character
         Vector2 characterPosition = characterManager.getMainCharacter();
@@ -299,7 +299,7 @@ public class AgentSlug extends Game {
     private void renderPlatforms() {
         shapeRenderer.setProjectionMatrix(camera.combined);
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.BROWN);
         for (Rectangle platform : platforms) {
             shapeRenderer.rect(platform.x, platform.y, platform.width, platform.height);
@@ -310,7 +310,7 @@ public class AgentSlug extends Game {
         }
         shapeRenderer.setColor(Color.BLUE);
         for (Triangle triangle : triangles) {
-            shapeRenderer.triangle(triangle.p1.x, triangle.p1.y, triangle.p2.x, triangle.p2.y, triangle.p3.x, triangle.p3.y);
+            shapeRenderer.triangle(triangle.v1.x, triangle.v1.y, triangle.v2.x, triangle.v2.y, triangle.v3.x, triangle.v3.y);
         }
         shapeRenderer.end();
     }
@@ -340,12 +340,31 @@ public class AgentSlug extends Game {
     }
 
     public static class Triangle {
-        public Vector2 p1, p2, p3;
+        public Vector2 v1, v2, v3;
 
         public Triangle(Vector2 p1, Vector2 p2, Vector2 p3) {
-            this.p1 = p1;
-            this.p2 = p2;
-            this.p3 = p3;
+            this.v1 = p1;
+            this.v2 = p2;
+            this.v3 = p3;
+        }
+
+        public boolean isOnOrBelowEdge(Vector2 point, Vector2 edgeStart, Vector2 edgeEnd) {
+            float crossProduct = (edgeEnd.x - edgeStart.x) * (point.y - edgeStart.y) - (edgeEnd.y - edgeStart.y) * (point.x - edgeStart.x);
+            return crossProduct >= 0;
+        }
+
+        // Method to check if a point is inside the triangle
+        public boolean contains(Vector2 point) {
+            float area = getArea(v1, v2, v3);
+            float area1 = getArea(point, v2, v3);
+            float area2 = getArea(v1, point, v3);
+            float area3 = getArea(v1, v2, point);
+
+            return Math.abs(area - (area1 + area2 + area3)) < 1e-6;
+        }
+
+        private float getArea(Vector2 a, Vector2 b, Vector2 c) {
+            return Math.abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2.0f);
         }
     }
 }

@@ -75,8 +75,81 @@ public class CharacterManager {
     public Vector2 getVelocity() {
         return velocity;
     }
+    private boolean isCollidingWithTriangleEdges(AgentSlug.Triangle triangle, Rectangle characterRect) {
+        Vector2[] points = {
+            new Vector2(characterRect.x, characterRect.y),
+            new Vector2(characterRect.x + characterRect.width, characterRect.y),
+            new Vector2(characterRect.x, characterRect.y + characterRect.height),
+            new Vector2(characterRect.x + characterRect.width, characterRect.y + characterRect.height)
+        };
 
-    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack, boolean jump, List<Rectangle> platforms, List<Rectangle> tiledRectangles) {
+        Vector2[] edges = {triangle.v1, triangle.v2, triangle.v2, triangle.v3, triangle.v3, triangle.v1};
+
+        for (int i = 0; i < edges.length; i += 2) {
+            Vector2 edgeStart = edges[i];
+            Vector2 edgeEnd = edges[i + 1];
+            for (Vector2 point : points) {
+                if (triangle.isOnOrBelowEdge(point, edgeStart, edgeEnd) &&
+                    !triangle.isOnOrBelowEdge(new Vector2(characterRect.x, characterRect.y + characterRect.height), edgeStart, edgeEnd)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    private void adjustPositionOnTriangleEdge(AgentSlug.Triangle triangle) {
+        Rectangle characterRect = getMainCharacterRectangle();
+        Vector2[] edges = {triangle.v1, triangle.v2, triangle.v2, triangle.v3, triangle.v3, triangle.v1};
+
+        for (int i = 0; i < edges.length; i += 2) {
+            Vector2 edgeStart = edges[i];
+            Vector2 edgeEnd = edges[i + 1];
+
+            if (isCollidingWithEdge(characterRect, edgeStart, edgeEnd)) {
+                // Align character to the edge
+                alignCharacterToEdge(characterRect, edgeStart, edgeEnd);
+                break;
+            }
+        }
+    }
+
+    private boolean isCollidingWithEdge(Rectangle characterRect, Vector2 edgeStart, Vector2 edgeEnd) {
+        Vector2[] points = {
+            new Vector2(characterRect.x, characterRect.y),
+            new Vector2(characterRect.x + characterRect.width, characterRect.y),
+            new Vector2(characterRect.x, characterRect.y + characterRect.height),
+            new Vector2(characterRect.x + characterRect.width, characterRect.y + characterRect.height)
+        };
+
+        for (Vector2 point : points) {
+            if (isOnLineSegment(point, edgeStart, edgeEnd)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isOnLineSegment(Vector2 point, Vector2 start, Vector2 end) {
+        return point.x >= Math.min(start.x, end.x) &&
+            point.x <= Math.max(start.x, end.x) &&
+            point.y >= Math.min(start.y, end.y) &&
+            point.y <= Math.max(start.y, end.y);
+    }
+
+    private void alignCharacterToEdge(Rectangle characterRect, Vector2 edgeStart, Vector2 edgeEnd) {
+        Vector2 edgeDirection = new Vector2(edgeEnd.x - edgeStart.x, edgeEnd.y - edgeStart.y).nor();
+        Vector2 characterCenter = new Vector2(characterRect.x + characterRect.width / 2, characterRect.y + characterRect.height / 2);
+
+        float distanceToEdge = (edgeDirection.x * (characterCenter.x - edgeStart.x) + edgeDirection.y * (characterCenter.y - edgeStart.y));
+        Vector2 projectedPoint = new Vector2(edgeStart.x + edgeDirection.x * distanceToEdge, edgeStart.y + edgeDirection.y * distanceToEdge);
+
+        if (projectedPoint.y > characterRect.y) {
+            mainCharacter.y = projectedPoint.y - characterRect.height;
+        }
+        velocity.y = 0;
+    }
+
+    public void update(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack, boolean jump, List<Rectangle> platforms, List<Rectangle> tiledRectangles,List<AgentSlug.Triangle> triangles) {
         stateTime += deltaTime;
         applyGravity(deltaTime);
 
@@ -96,7 +169,7 @@ public class CharacterManager {
 
         handlePlatformCollisions(platforms);
         handleTiledRectangleCollisions(tiledRectangles);
-
+        handleTriangleCollisions(triangles); // Handle triangular platform collisions
         if (attack && !shooting) {
             shoot();
         }
@@ -179,6 +252,43 @@ public class CharacterManager {
                 currentState = AnimationType.FALL;
             }
         }
+    }
+    private void handleTriangleCollisions(List<AgentSlug.Triangle> triangles) {
+        Rectangle characterRect = getMainCharacterRectangle();
+        boolean isOnPlatform = false;
+
+        for (AgentSlug.Triangle triangle : triangles) {
+            if (isCollidingWithTriangleEdges(triangle, characterRect)) {
+                adjustPositionOnTriangleEdge(triangle);
+                isOnPlatform = true;
+                break;
+            }
+        }
+
+        if (!isOnPlatform && mainCharacter.y > 0.f && velocity.y < 0.f) {
+            if (!shooting) {
+                currentState = AnimationType.FALL;
+            }
+        }
+    }
+
+    private boolean isCollidingWithTriangle(AgentSlug.Triangle triangle, Rectangle characterRect) {
+        // Check if the character is within the bounding box of the triangle
+        if (!triangle.contains(new Vector2(characterRect.x, characterRect.y)) &&
+            !triangle.contains(new Vector2(characterRect.x + characterRect.width, characterRect.y)) &&
+            !triangle.contains(new Vector2(characterRect.x, characterRect.y + characterRect.height)) &&
+            !triangle.contains(new Vector2(characterRect.x + characterRect.width, characterRect.y + characterRect.height))) {
+            return false;
+        }
+
+        // More precise triangle collision handling logic
+        return true; // Placeholder for more detailed triangle collision logic
+    }
+
+    private void landOnTriangle(AgentSlug.Triangle triangle) {
+        // Compute the landing position based on the triangle
+        mainCharacter.y = Math.min(triangle.v1.y, Math.min(triangle.v2.y, triangle.v3.y)) + 0.1f; // Adjust as necessary
+        velocity.y = 0;
     }
 
     private boolean isCollidingWithPlatform(Rectangle platform, Rectangle characterRect) {
