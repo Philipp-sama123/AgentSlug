@@ -85,7 +85,10 @@ public class CharacterManager {
             jumpSound.play();
         }
 
+        handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
+
         mainCharacter.y += velocity.y * deltaTime;
+        mainCharacter.x += velocity.x * deltaTime;
 
         if (mainCharacter.y < 0.f) {
             landOnGround();
@@ -93,7 +96,6 @@ public class CharacterManager {
 
         handlePlatformCollisions(platforms);
         handleTiledRectangleCollisions(tiledRectangles);
-        handleMovement(deltaTime, moveLeft, moveRight, runLeft, runRight);
 
         if (attack && !shooting) {
             shoot();
@@ -102,7 +104,11 @@ public class CharacterManager {
         updateState(moveLeft, moveRight, runLeft, runRight);
         updateBullets(deltaTime);
         checkBulletCollisions();
+
+        // Reset horizontal velocity after applying movement
+        velocity.x = 0;
     }
+
     private void handleTiledRectangleCollisions(List<Rectangle> tiledRectangles) {
         Rectangle characterRect = getMainCharacterRectangle();
 
@@ -118,6 +124,7 @@ public class CharacterManager {
             }
         }
     }
+
     private void applyGravity(float deltaTime) {
         velocity.y += GRAVITY * deltaTime;
     }
@@ -139,26 +146,20 @@ public class CharacterManager {
 
     private void handleMovement(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight) {
         if (moveLeft || runLeft) {
-            moveCharacterLeft(deltaTime, runLeft);
+            moveCharacterLeft(deltaTime, runLeft || moveLeft);
         } else if (moveRight || runRight) {
-            moveCharacterRight(deltaTime, runRight);
+            moveCharacterRight(deltaTime, runRight || moveRight);
         }
     }
 
     private void moveCharacterLeft(float deltaTime, boolean isRunning) {
-        float newMainCharacterX = mainCharacter.x - (isRunning ? RUN_SPEED : MOVE_SPEED) * deltaTime;
-        if (newMainCharacterX > 0) {
-            mainCharacter.x = newMainCharacterX;
-            setFacingRight(false);
-        }
+        velocity.x = -(isRunning ? RUN_SPEED : MOVE_SPEED);
+        setFacingRight(false);
     }
 
     private void moveCharacterRight(float deltaTime, boolean isRunning) {
-        float newMainCharacterX = mainCharacter.x + (isRunning ? RUN_SPEED : MOVE_SPEED) * deltaTime;
-        if (newMainCharacterX < Gdx.graphics.getWidth() - getCurrentFrameWidth()) {
-            mainCharacter.x = newMainCharacterX;
-            setFacingRight(true);
-        }
+        velocity.x = (isRunning ? RUN_SPEED : MOVE_SPEED);
+        setFacingRight(true);
     }
 
     private void handlePlatformCollisions(List<Rectangle> platforms) {
@@ -235,10 +236,8 @@ public class CharacterManager {
             currentState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
         } else if (velocity.y < 0) {
             currentState = shooting ? AnimationType.FALL_SHOOT : AnimationType.FALL;
-        } else if (moveLeft || moveRight) {
-            currentState = shooting ? AnimationType.WALK_SHOOT : AnimationType.WALK;
-        } else if (runLeft || runRight) {
-            currentState = shooting ? AnimationType.RUN_SHOOT : AnimationType.RUN;
+        } else if (velocity.x != 0) {
+            currentState = shooting ? (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN_SHOOT : AnimationType.WALK_SHOOT) : (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN : AnimationType.WALK);
         } else {
             currentState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
         }
