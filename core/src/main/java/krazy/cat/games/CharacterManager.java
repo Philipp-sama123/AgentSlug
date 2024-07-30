@@ -94,8 +94,8 @@ public class CharacterManager {
             landOnGround();
         }
 
-        handlePlatformCollisions(platforms);
-        handleTiledRectangleCollisions(tiledRectangles);
+        handleRectangleCollisions(platforms);
+        handleRectangleCollisions(tiledRectangles);
 
         if (attack && !shooting) {
             shoot();
@@ -109,18 +109,15 @@ public class CharacterManager {
         velocity.x = 0;
     }
 
-    private void handleTiledRectangleCollisions(List<Rectangle> tiledRectangles) {
+    private void handleRectangleCollisions(List<Rectangle> rectangles) {
         Rectangle characterRect = getMainCharacterRectangle();
 
-        for (Rectangle tiledRectangle : tiledRectangles) {
-            if (characterRect.overlaps(tiledRectangle)) {
-                // Handle collision with the tiled rectangle
-                // For example, stop movement or adjust position
-                if (velocity.y < 0) {
-                    mainCharacter.y = tiledRectangle.y + tiledRectangle.height;
+        for (Rectangle rectangle : rectangles) {
+            if (characterRect.overlaps(rectangle)) {
+                if (velocity.y < 0 && mainCharacter.y + characterRect.height / 2 >= (rectangle.y + rectangle.height)) {
+                    mainCharacter.y = rectangle.y + rectangle.height;
                     velocity.y = 0;
                 }
-                // You can also handle other collision effects here
             }
         }
     }
@@ -160,45 +157,6 @@ public class CharacterManager {
     private void moveCharacterRight(float deltaTime, boolean isRunning) {
         velocity.x = (isRunning ? RUN_SPEED : MOVE_SPEED);
         setFacingRight(true);
-    }
-
-    private void handlePlatformCollisions(List<Rectangle> platforms) {
-        Rectangle characterRect = getMainCharacterRectangle();
-        boolean isOnPlatform = false;
-
-        for (Rectangle platform : platforms) {
-            if (isCollidingWithPlatform(platform, characterRect)) {
-                landOnPlatform(platform);
-                isOnPlatform = true;
-                break;
-            }
-        }
-
-        if (!isOnPlatform && mainCharacter.y > 0.f && velocity.y < 0.f) {
-            if (!shooting) {
-                currentState = AnimationType.FALL;
-            }
-        }
-    }
-
-    private boolean isCollidingWithPlatform(Rectangle platform, Rectangle characterRect) {
-        float characterBottom = characterRect.y;
-        float platformTop = platform.y + platform.height;
-        float platformLeft = platform.x;
-        float platformRight = platform.x + platform.width;
-        float characterLeft = characterRect.x;
-        float characterRight = characterRect.x + characterRect.width;
-
-        boolean isFalling = velocity.y <= 0;
-        boolean isAbovePlatform = characterBottom > platformTop - 15;
-        boolean isWithinHorizontalBounds = (characterLeft >= platformLeft && characterLeft <= platformRight) || (characterRight >= platformLeft && characterRight <= platformRight);
-
-        return isFalling && isAbovePlatform && isWithinHorizontalBounds && characterRect.overlaps(platform);
-    }
-
-    private void landOnPlatform(Rectangle platform) {
-        mainCharacter.y = platform.y + platform.height;
-        velocity.y = 0;
     }
 
     private void adjustFrameOrientation(TextureRegion frame) {

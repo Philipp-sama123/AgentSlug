@@ -9,14 +9,18 @@
     ],
     "fileStates": {
         "AgentSlug_Map.tmx": {
-            "scale": 0.8098,
-            "selectedLayer": 2,
+            "scale": 1.0643,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 547.6660903926895,
-                "y": 9388.737959990121
+                "x": 764.3521563468946,
+                "y": 9452.222117823922
             }
         },
         "Nature.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "PlatformerAssetsV2.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         }
@@ -28,11 +32,13 @@
     "map.width": 500,
     "openFiles": [
         "Nature.tsx",
-        "AgentSlug_Map.tmx"
+        "AgentSlug_Map.tmx",
+        "PlatformerAssetsV2.tsx"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
         "Nature.tsx",
+        "PlatformerAssetsV2.tsx",
         "AgentSlug_Map.tmx"
     ],
     "tileset.lastUsedFormat": "tsx"
