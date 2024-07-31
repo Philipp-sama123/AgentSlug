@@ -19,7 +19,7 @@ public class EnemyManager {
     public static final float RUN_SPEED = 300.f;
     public static final float JUMP_SPEED = 1000.f;
     public static final float GRAVITY = -1000.f;
-    public static final float SCALE =5.0f; // Adjust based on your specific scale
+    public static final float SCALE = 5.0f; // Adjust based on your specific scale
 
     private final AnimationSetZombie animationSetZombie;
     private Vector2 mainCharacter = new Vector2();
@@ -75,6 +75,16 @@ public class EnemyManager {
     }
 
     public void updateAnimationState() {
+        if (currentAnimationState == ZombieAnimationType.HIT) {
+            Animation<TextureRegion> hitAnimation = animationSetZombie.getAnimation(currentAnimationState);
+            if (hitAnimation.isAnimationFinished(stateTime)) {
+                stateTime = 0f;
+                currentAnimationState = ZombieAnimationType.IDLE; // Transition back to idle after hit
+            }else {
+                return;
+            }
+        }
+
         if (attacking) {
             // Check if the attacking animation has finished
             Animation<TextureRegion> attackAnimation = animationSetZombie.getAnimation(currentAnimationState);
@@ -83,7 +93,6 @@ public class EnemyManager {
                 stateTime = 0f;
             }
         }
-            currentAnimationState = attacking ? ZombieAnimationType.ATTACK : ZombieAnimationType.WALK_ATTACK;
 
         if (velocity.x != 0) {
             currentAnimationState = attacking ? ZombieAnimationType.WALK_ATTACK : ZombieAnimationType.WALK;
@@ -189,6 +198,8 @@ public class EnemyManager {
             if (characterRect.overlaps(bullet.getBoundingRectangle())) {
                 bulletIterator.remove();
                 hitSound.play();
+                currentAnimationState = ZombieAnimationType.HIT; // Switch to hit animation
+                stateTime = 0f; // Reset state time for the hit animation
                 // Handle collision (e.g., reduce health, trigger an effect, etc.)
             }
         }
