@@ -22,13 +22,14 @@ public class BatManager {
     private Vector2 batPosition = new Vector2();
     private Vector2 velocity = new Vector2();
     private float stateTime = 0f;
-    private boolean facingRight = false;
     private AnimationSetBat.BatAnimationType currentAnimationState = AnimationSetBat.BatAnimationType.IDLE1;
-    private boolean attacking = false;
 
     private Sound attackSound;
     private Sound hitSound;
+
     private boolean isHit = false;
+    private boolean attacking = false;
+    private boolean facingRight = false;
 
     public BatManager(Texture spriteSheet) {
         animationSetBat = new AnimationSetBat(spriteSheet);
@@ -143,33 +144,44 @@ public class BatManager {
         }
     }
 
-    public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean flyUp, boolean attack) {
-        if (attack && canAttack()) {
-            attacking = true;
-            stateTime = 0f;
-            attackSound.play();
-        }
-
-        if (moveLeft) {
-            velocity.x = -MOVE_SPEED;
-            setFacingRight(false);
-        } else if (moveRight) {
-            velocity.x = MOVE_SPEED;
-            setFacingRight(true);
-        }
-
-        if (flyUp) {
-            velocity.y = FLY_SPEED;
-        }
-
-        batPosition.add(velocity.scl(deltaTime));
-    }
-
     private void adjustFrameOrientation(TextureRegion frame) {
         if (facingRight && !animationSetBat.isFlipped()) {
             animationSetBat.flipFramesHorizontally();
         } else if (!facingRight && animationSetBat.isFlipped()) {
             animationSetBat.flipFramesHorizontally();
+        }
+    }
+
+    public void moveBatTowardsCharacter(CharacterManager characterManager, float deltaTime) {
+        if (isHit)
+            return;
+        Vector2 batPosition = getBatPosition();
+        Vector2 characterPosition = characterManager.getMainCharacter();
+
+        float distanceToCharacter = batPosition.dst(characterPosition);
+        // If the character is within 20 pixels, attack
+        if (distanceToCharacter <= 50) {
+            if (!attacking) {
+                attacking = true;
+                stateTime = 0f;
+                currentAnimationState = AnimationSetBat.BatAnimationType.GRAB; // Assuming GRAB2 is the attack animation
+                attackSound.play();
+            }
+            return; // Exit the method early to stop movement while attacking
+        }
+
+        Vector2 direction = characterPosition.cpy().sub(batPosition).nor();
+        getVelocity().set(direction.scl(BatManager.MOVE_SPEED));
+
+        getBatPosition().add(getVelocity().scl(deltaTime));
+
+        boolean isCharacterRight = characterPosition.x > getBatPosition().x;
+
+        // Update facing direction based on character's position
+        if (isCharacterRight) {
+            setFacingRight(false);
+        } else {
+            setFacingRight(true);
         }
     }
 
@@ -203,6 +215,6 @@ public class BatManager {
     }
 
     public void renderCharacter(Batch batch) {
-        batch.draw(getCurrentFrame(), batPosition.x, batPosition.y, 64 * SCALE, 64 * SCALE);
+        batch.draw(getCurrentFrame(), batPosition.x, batPosition.y, 40 * SCALE, 42 * SCALE);
     }
 }

@@ -202,40 +202,21 @@ public class AgentSlug extends Game {
     private void updateEnemies(float deltaTime) {
         for (EnemyManager enemy : enemies) {
             enemy.update(deltaTime);
-            moveEnemyTowardsCharacter(enemy, deltaTime);
+            enemy.moveEnemyTowardsCharacter(characterManager, deltaTime);
             enemy.handleCollisions(platforms, tiledRectangles);
             enemy.updateAnimationState();
             enemy.checkBulletCollisions(bullets);
         }
     }
 
-    private void moveEnemyTowardsCharacter(EnemyManager enemy, float deltaTime) {
-        Vector2 enemyPosition = enemy.getMainCharacter();
-        Vector2 characterPosition = characterManager.getMainCharacter();
-
-        Vector2 direction = characterPosition.cpy().sub(enemyPosition).nor();
-        enemy.getVelocity().set(direction.scl(EnemyManager.MOVE_SPEED));
-
-        enemy.getMainCharacter().add(enemy.getVelocity().scl(deltaTime));
-    }
     private void updateBats(float deltaTime) {
         for (BatManager bat : bats) {
             bat.update(deltaTime);
-            moveBatTowardsCharacter(bat, deltaTime);
+            bat.moveBatTowardsCharacter(characterManager, deltaTime);
             bat.handleCollisions(platforms, tiledRectangles);
             bat.updateAnimationState();
             bat.checkBulletCollisions(bullets);
         }
-    }
-
-    private void moveBatTowardsCharacter(BatManager bat, float deltaTime) {
-        Vector2 batPosition = bat.getBatPosition();
-        Vector2 characterPosition = characterManager.getMainCharacter();
-
-        Vector2 direction = characterPosition.cpy().sub(batPosition).nor();
-        bat.getVelocity().set(direction.scl(BatManager.MOVE_SPEED));
-
-        bat.getBatPosition().add(bat.getVelocity().scl(deltaTime));
     }
 
     private void renderBats(Batch batch) {

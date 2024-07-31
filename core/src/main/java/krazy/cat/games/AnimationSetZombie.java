@@ -26,7 +26,7 @@ public class AnimationSetZombie {
 
         animations.put(ZombieAnimationType.IDLE, createAnimation(textureRegions, 0, 0, 7));
         animations.put(ZombieAnimationType.WALK, createAnimation(textureRegions, 0, 7, 8));
-        animations.put(ZombieAnimationType.ATTACK, createAnimation(textureRegions, 1, 3, 8));
+        animations.put(ZombieAnimationType.ATTACK, createAnimation(textureRegions, 1, 5, 6));
         animations.put(ZombieAnimationType.EAT_PREY, createAnimation(textureRegions, 2, 1, 5));
         animations.put(ZombieAnimationType.WALK_ATTACK, createAnimation(textureRegions, 2, 6, 8));
         animations.put(ZombieAnimationType.HIT, createAnimation(textureRegions, 3, 6, 3)); // actually it starts at 4 but the effect should start immediately and its 5 frames long actually

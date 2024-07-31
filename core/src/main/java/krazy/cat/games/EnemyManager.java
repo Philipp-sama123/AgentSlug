@@ -45,7 +45,7 @@ public class EnemyManager {
     }
 
     public void resetCharacterPosition() {
-        mainCharacter.set(Gdx.graphics.getWidth() / 2f - getCurrentFrameWidth() / 2f, Gdx.graphics.getHeight() / 2f);
+        mainCharacter.set(Gdx.graphics.getWidth() / 2f - getCurrentFrameWidth() / 2f, Gdx.graphics.getHeight());
         stateTime = 0f;
         currentAnimationState = ZombieAnimationType.IDLE;
         velocity.set(0, 0);
@@ -58,7 +58,7 @@ public class EnemyManager {
 
     public TextureRegion getCurrentFrame() {
         TextureRegion frame = animationSetZombie.getFrame(currentAnimationState, stateTime, true);
-        adjustFrameOrientation(frame);
+        adjustFrameOrientation();
         return frame;
     }
 
@@ -73,11 +73,12 @@ public class EnemyManager {
     public void update(float deltaTime) {
         stateTime += deltaTime;
         applyGravity(deltaTime);
+        updateAnimationState();
     }
 
     public void updateAnimationState() {
         if (isHit) {
-            currentAnimationState= ZombieAnimationType.HIT;
+            currentAnimationState = ZombieAnimationType.HIT;
             Animation<TextureRegion> hitAnimation = animationSetZombie.getAnimation(currentAnimationState);
             if (hitAnimation.isAnimationFinished(stateTime)) {
                 stateTime = 0f;
@@ -146,30 +147,11 @@ public class EnemyManager {
         if (!attacking) {
             currentAnimationState = ZombieAnimationType.IDLE;
         }
+        // Jump if under the floor
+        velocity.y += JUMP_SPEED;
     }
 
-    public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean attack) {
-        boolean isRunning = runLeft || runRight;
-
-        if (attack && canAttack()) {
-            attacking = true;
-            stateTime = 0f;
-            attackSound.play();
-        }
-
-        if (moveLeft || runLeft) {
-            velocity.x = -(isRunning ? RUN_SPEED : MOVE_SPEED);
-            setFacingRight(false);
-        } else if (moveRight || runRight) {
-            velocity.x = (isRunning ? RUN_SPEED : MOVE_SPEED);
-            setFacingRight(true);
-        }
-
-        mainCharacter.y += velocity.y * deltaTime;
-        mainCharacter.x += velocity.x * deltaTime;
-    }
-
-    private void adjustFrameOrientation(TextureRegion frame) {
+    private void adjustFrameOrientation() {
         if (facingRight && !animationSetZombie.isFlipped()) {
             animationSetZombie.flipFramesHorizontally();
         } else if (!facingRight && animationSetZombie.isFlipped()) {
@@ -208,5 +190,42 @@ public class EnemyManager {
 
     public void renderCharacter(Batch batch) {
         batch.draw(getCurrentFrame(), getMainCharacter().x, getMainCharacter().y, 64 * SCALE, 64 * SCALE);
+    }
+
+    public void moveEnemyTowardsCharacter(CharacterManager characterManager, float deltaTime) {
+        if (isHit) {
+            return;
+        }
+
+        Vector2 enemyPosition = getMainCharacter();
+        Vector2 characterPosition = characterManager.getMainCharacter();
+
+        float distanceToCharacter = enemyPosition.dst(characterPosition);
+        // If the character is within 75 pixels, attack
+        if (distanceToCharacter <= 100) {
+            if (!attacking) {
+                attacking = true;
+                stateTime = 0f;
+                currentAnimationState = ZombieAnimationType.ATTACK; // Assuming GRAB2 is the attack animation
+                attackSound.play();
+            }
+            return; // Exit the method early to stop movement while attacking
+        }
+
+
+        boolean isCharacterRight = characterPosition.x > enemyPosition.x;
+
+        // Update facing direction based on character's position
+        if (isCharacterRight) {
+            setFacingRight(true);
+            velocity.x = MOVE_SPEED;
+        } else {
+            setFacingRight(false);
+            velocity.x = -MOVE_SPEED;
+        }
+
+        // Update position based on velocity
+        mainCharacter.x += velocity.x * deltaTime;
+        mainCharacter.y += velocity.y * deltaTime;
     }
 }
