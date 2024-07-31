@@ -14,7 +14,7 @@ import java.util.List;
 
 import krazy.cat.games.AnimationSetZombie.ZombieAnimationType;
 
-public class EnemyManager {
+public class ZombieManager {
     public static final float MOVE_SPEED = 100.f;
     public static final float RUN_SPEED = 300.f;
     public static final float JUMP_SPEED = 1000.f;
@@ -33,7 +33,7 @@ public class EnemyManager {
     private Sound hitSound;
     private boolean isHit = false;
 
-    public EnemyManager(Texture spriteSheet) {
+    public ZombieManager(Texture spriteSheet) {
         animationSetZombie = new AnimationSetZombie(spriteSheet);
         resetCharacterPosition();
         initializeSounds();
@@ -192,7 +192,7 @@ public class EnemyManager {
         batch.draw(getCurrentFrame(), getMainCharacter().x, getMainCharacter().y, 64 * SCALE, 64 * SCALE);
     }
 
-    public void moveEnemyTowardsCharacter(CharacterManager characterManager, float deltaTime) {
+    public void moveZombieTowardsCharacter(CharacterManager characterManager, float deltaTime) {
         if (isHit) {
             return;
         }

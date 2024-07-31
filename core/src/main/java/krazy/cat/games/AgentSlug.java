@@ -31,18 +31,19 @@ public class AgentSlug extends Game {
     private SpriteBatch batch;
     private BitmapFont textToShow;
 
-    private List<Bullet> bullets = new ArrayList<>();
-    private List<EnemyManager> enemies = new ArrayList<>();
     private int score = 0;
 
     private CharacterManager characterManager;
     private InputHandler inputHandler;
     private ShapeRenderer shapeRenderer;
 
+    private List<Bullet> bullets = new ArrayList<>();
+    private List<ZombieManager> zombies = new ArrayList<>();
+    private List<BatManager> bats = new ArrayList<>();
+
     private List<Rectangle> platforms = new ArrayList<>();
     private List<Rectangle> tiledRectangles = new ArrayList<>();
 
-    private List<BatManager> bats = new ArrayList<>();
 
     @Override
     public void create() {
@@ -55,7 +56,7 @@ public class AgentSlug extends Game {
         setupCamera();
 
         Texture characterTexture = new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png");
-        Texture enemyTexture = new Texture("Zombies/GandalfHardcore Zombie v1 sheet.png"); // Replace with your enemy sprite sheet
+        Texture zombieTexture = new Texture("Zombies/GandalfHardcore Zombie v1 sheet.png"); // Replace with your enemy sprite sheet
         Texture batTexture = new Texture("Bat_ver20230918/Bat_v1/Sprite Sheet/Bat_v1_Sheet.png"); // Replace with your bat sprite sheet
 
 
@@ -69,7 +70,7 @@ public class AgentSlug extends Game {
         parseCollisionLayer();
         createPlatforms();
 
-        spawnEnemies(enemyTexture);
+        spawnZombies(zombieTexture);
         spawnBats(batTexture);
     }
 
@@ -93,8 +94,9 @@ public class AgentSlug extends Game {
         textToShow.dispose();
         shapeRenderer.dispose();
         mapRenderer.dispose();
-        for (EnemyManager enemy : enemies) {
-            enemy.dispose();
+
+        for (ZombieManager zombie : zombies) {
+            zombie.dispose();
         }
 
         for (BatManager bat : bats) {
@@ -106,7 +108,7 @@ public class AgentSlug extends Game {
         batch.setProjectionMatrix(camera.combined); // Use the camera's combined matrix for the batch
         batch.begin();
         renderBullets(batch);
-        renderEnemies(batch);
+        renderZombies(batch);
         renderBats(batch);
         renderScore(batch);
         characterManager.renderCharacter(batch);
@@ -167,7 +169,7 @@ public class AgentSlug extends Game {
     private void updateGameState(float deltaTime) {
         updateCharacter(deltaTime);
         updateBullets(deltaTime);
-        updateEnemies(deltaTime);
+        updateZombies(deltaTime);
 
         updateBats(deltaTime);
         updateCamera();
@@ -199,13 +201,13 @@ public class AgentSlug extends Game {
         }
     }
 
-    private void updateEnemies(float deltaTime) {
-        for (EnemyManager enemy : enemies) {
-            enemy.update(deltaTime);
-            enemy.moveEnemyTowardsCharacter(characterManager, deltaTime);
-            enemy.handleCollisions(platforms, tiledRectangles);
-            enemy.updateAnimationState();
-            enemy.checkBulletCollisions(bullets);
+    private void updateZombies(float deltaTime) {
+        for (ZombieManager zombie : zombies) {
+            zombie.update(deltaTime);
+            zombie.moveZombieTowardsCharacter(characterManager, deltaTime);
+            zombie.handleCollisions(platforms, tiledRectangles);
+            zombie.updateAnimationState();
+            zombie.checkBulletCollisions(bullets);
         }
     }
 
@@ -232,6 +234,7 @@ public class AgentSlug extends Game {
             bats.add(bat);
         }
     }
+
     private void updateCamera() {
         // Update the camera position to follow the character
         Vector2 characterPosition = characterManager.getMainCharacter();
@@ -255,9 +258,9 @@ public class AgentSlug extends Game {
         }
     }
 
-    private void renderEnemies(Batch batch) {
-        for (EnemyManager enemy : enemies) {
-            enemy.renderCharacter(batch);
+    private void renderZombies(Batch batch) {
+        for (ZombieManager zombie : zombies) {
+            zombie.renderCharacter(batch);
         }
     }
 
@@ -299,11 +302,11 @@ public class AgentSlug extends Game {
         textToShow.getData().setScale(10);
     }
 
-    private void spawnEnemies(Texture enemyTexture) {
+    private void spawnZombies(Texture zombieTexture) {
         for (Rectangle platform : platforms) {
-            EnemyManager enemy = new EnemyManager(enemyTexture);
-            enemy.getMainCharacter().set(platform.x, platform.y + platform.height);
-            enemies.add(enemy);
+            ZombieManager zombie = new ZombieManager(zombieTexture);
+            zombie.getMainCharacter().set(platform.x, platform.y + platform.height);
+            zombies.add(zombie);
         }
     }
 }
