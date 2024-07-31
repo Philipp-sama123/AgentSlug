@@ -42,6 +42,8 @@ public class AgentSlug extends Game {
     private List<Rectangle> platforms = new ArrayList<>();
     private List<Rectangle> tiledRectangles = new ArrayList<>();
 
+    private List<BatManager> bats = new ArrayList<>();
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -54,6 +56,8 @@ public class AgentSlug extends Game {
 
         Texture characterTexture = new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png");
         Texture enemyTexture = new Texture("Zombies/GandalfHardcore Zombie v1 sheet.png"); // Replace with your enemy sprite sheet
+        Texture batTexture = new Texture("Bat_ver20230918/Bat_v1/Sprite Sheet/Bat_v1_Sheet.png"); // Replace with your bat sprite sheet
+
 
         characterManager = new CharacterManager(characterTexture);
         createTextToShow();
@@ -66,6 +70,7 @@ public class AgentSlug extends Game {
         createPlatforms();
 
         spawnEnemies(enemyTexture);
+        spawnBats(batTexture);
     }
 
     @Override
@@ -91,15 +96,20 @@ public class AgentSlug extends Game {
         for (EnemyManager enemy : enemies) {
             enemy.dispose();
         }
+
+        for (BatManager bat : bats) {
+            bat.dispose();
+        }
     }
 
     private void renderGameObjects() {
         batch.setProjectionMatrix(camera.combined); // Use the camera's combined matrix for the batch
         batch.begin();
-        characterManager.renderCharacter(batch);
         renderBullets(batch);
         renderEnemies(batch);
+        renderBats(batch);
         renderScore(batch);
+        characterManager.renderCharacter(batch);
         batch.end();
 
         // debugRendering
@@ -158,6 +168,8 @@ public class AgentSlug extends Game {
         updateCharacter(deltaTime);
         updateBullets(deltaTime);
         updateEnemies(deltaTime);
+
+        updateBats(deltaTime);
         updateCamera();
     }
 
@@ -206,7 +218,39 @@ public class AgentSlug extends Game {
 
         enemy.getMainCharacter().add(enemy.getVelocity().scl(deltaTime));
     }
+    private void updateBats(float deltaTime) {
+        for (BatManager bat : bats) {
+            bat.update(deltaTime);
+            moveBatTowardsCharacter(bat, deltaTime);
+            bat.handleCollisions(platforms, tiledRectangles);
+            bat.updateAnimationState();
+            bat.checkBulletCollisions(bullets);
+        }
+    }
 
+    private void moveBatTowardsCharacter(BatManager bat, float deltaTime) {
+        Vector2 batPosition = bat.getBatPosition();
+        Vector2 characterPosition = characterManager.getMainCharacter();
+
+        Vector2 direction = characterPosition.cpy().sub(batPosition).nor();
+        bat.getVelocity().set(direction.scl(BatManager.MOVE_SPEED));
+
+        bat.getBatPosition().add(bat.getVelocity().scl(deltaTime));
+    }
+
+    private void renderBats(Batch batch) {
+        for (BatManager bat : bats) {
+            bat.renderCharacter(batch);
+        }
+    }
+
+    private void spawnBats(Texture batTexture) {
+        for (Rectangle platform : platforms) {
+            BatManager bat = new BatManager(batTexture);
+            bat.getBatPosition().set(platform.x, platform.y + platform.height);
+            bats.add(bat);
+        }
+    }
     private void updateCamera() {
         // Update the camera position to follow the character
         Vector2 characterPosition = characterManager.getMainCharacter();
