@@ -19,7 +19,7 @@ public class EnemyManager {
     public static final float RUN_SPEED = 300.f;
     public static final float JUMP_SPEED = 1000.f;
     public static final float GRAVITY = -1000.f;
-    public static final float SCALE = 1.0f; // Adjust based on your specific scale
+    public static final float SCALE =5.0f; // Adjust based on your specific scale
 
     private final AnimationSetZombie animationSetZombie;
     private Vector2 mainCharacter = new Vector2();
@@ -39,7 +39,7 @@ public class EnemyManager {
     }
 
     private void initializeSounds() {
-        attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Attack.wav"));
+        attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Shoot.wav"));
         hitSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Hit.wav"));
     }
 
@@ -83,12 +83,10 @@ public class EnemyManager {
                 stateTime = 0f;
             }
         }
-        if (velocity.y > 0) {
             currentAnimationState = attacking ? ZombieAnimationType.ATTACK : ZombieAnimationType.WALK_ATTACK;
-        } else if (velocity.y < 0) {
-            currentAnimationState = attacking ? ZombieAnimationType.ATTACK : ZombieAnimationType.WALK_ATTACK;
-        } else if (velocity.x != 0) {
-            currentAnimationState = attacking ? ZombieAnimationType.ATTACK : ZombieAnimationType.WALK;
+
+        if (velocity.x != 0) {
+            currentAnimationState = attacking ? ZombieAnimationType.WALK_ATTACK : ZombieAnimationType.WALK;
         } else {
             currentAnimationState = attacking ? ZombieAnimationType.ATTACK : ZombieAnimationType.IDLE;
         }

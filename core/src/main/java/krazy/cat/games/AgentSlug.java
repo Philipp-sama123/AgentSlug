@@ -22,10 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AgentSlug extends Game {
-    // ToDo:
-    //  Put this all in a Class called GameLoop
-    //  here handle --> Main Menu --> GameLoop --> PauseMenu -->...
-
     public static final int SCALE = 5;
     public static final float MAP_SCALE = 5.f; // Scaling factor for the map
 
@@ -36,10 +32,10 @@ public class AgentSlug extends Game {
     private BitmapFont textToShow;
 
     private List<Bullet> bullets = new ArrayList<>();
+    private List<EnemyManager> enemies = new ArrayList<>();
     private int score = 0;
 
     private CharacterManager characterManager;
-
     private InputHandler inputHandler;
     private ShapeRenderer shapeRenderer;
 
@@ -57,6 +53,8 @@ public class AgentSlug extends Game {
         setupCamera();
 
         Texture characterTexture = new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png");
+        Texture enemyTexture = new Texture("Zombies/GandalfHardcore Zombie v1 sheet.png"); // Replace with your enemy sprite sheet
+
         characterManager = new CharacterManager(characterTexture);
         createTextToShow();
 
@@ -66,6 +64,8 @@ public class AgentSlug extends Game {
         shapeRenderer = new ShapeRenderer();
         parseCollisionLayer();
         createPlatforms();
+
+        spawnEnemies(enemyTexture);
     }
 
     @Override
@@ -88,6 +88,9 @@ public class AgentSlug extends Game {
         textToShow.dispose();
         shapeRenderer.dispose();
         mapRenderer.dispose();
+        for (EnemyManager enemy : enemies) {
+            enemy.dispose();
+        }
     }
 
     private void renderGameObjects() {
@@ -95,6 +98,7 @@ public class AgentSlug extends Game {
         batch.begin();
         characterManager.renderCharacter(batch);
         renderBullets(batch);
+        renderEnemies(batch);
         renderScore(batch);
         batch.end();
 
@@ -153,6 +157,7 @@ public class AgentSlug extends Game {
     private void updateGameState(float deltaTime) {
         updateCharacter(deltaTime);
         updateBullets(deltaTime);
+        updateEnemies(deltaTime);
         updateCamera();
     }
 
@@ -174,6 +179,34 @@ public class AgentSlug extends Game {
         characterManager.checkBulletCollisions(bullets);
     }
 
+    private void updateBullets(float deltaTime) {
+        Iterator<Bullet> bulletIterator = bullets.iterator();
+        while (bulletIterator.hasNext()) {
+            Bullet bullet = bulletIterator.next();
+            bullet.update(deltaTime);
+        }
+    }
+
+    private void updateEnemies(float deltaTime) {
+        for (EnemyManager enemy : enemies) {
+            enemy.update(deltaTime);
+            moveEnemyTowardsCharacter(enemy, deltaTime);
+            enemy.handleCollisions(platforms, tiledRectangles);
+            enemy.updateAnimationState();
+            enemy.checkBulletCollisions(bullets);
+        }
+    }
+
+    private void moveEnemyTowardsCharacter(EnemyManager enemy, float deltaTime) {
+        Vector2 enemyPosition = enemy.getMainCharacter();
+        Vector2 characterPosition = characterManager.getMainCharacter();
+
+        Vector2 direction = characterPosition.cpy().sub(enemyPosition).nor();
+        enemy.getVelocity().set(direction.scl(EnemyManager.MOVE_SPEED));
+
+        enemy.getMainCharacter().add(enemy.getVelocity().scl(deltaTime));
+    }
+
     private void updateCamera() {
         // Update the camera position to follow the character
         Vector2 characterPosition = characterManager.getMainCharacter();
@@ -191,20 +224,15 @@ public class AgentSlug extends Game {
         camera.update();
     }
 
-    public void updateBullets(float deltaTime) {
-        Iterator<Bullet> bulletIterator = bullets.iterator();
-        while (bulletIterator.hasNext()) {
-            Bullet bullet = bulletIterator.next();
-            bullet.update(deltaTime);
-//            if (bullet.getPosition().x < 0 || bullet.getPosition().x > Gdx.graphics.getWidth()) {
-//                bulletIterator.remove();
-//            }
-        }
-    }
-
     private void renderBullets(Batch batch) {
         for (Bullet bullet : bullets) {
             bullet.render(batch);
+        }
+    }
+
+    private void renderEnemies(Batch batch) {
+        for (EnemyManager enemy : enemies) {
+            enemy.renderCharacter(batch);
         }
     }
 
@@ -244,5 +272,13 @@ public class AgentSlug extends Game {
         textToShow = new BitmapFont();
         textToShow.setColor(Color.WHITE);
         textToShow.getData().setScale(10);
+    }
+
+    private void spawnEnemies(Texture enemyTexture) {
+        for (Rectangle platform : platforms) {
+            EnemyManager enemy = new EnemyManager(enemyTexture);
+            enemy.getMainCharacter().set(platform.x, platform.y + platform.height);
+            enemies.add(enemy);
+        }
     }
 }
