@@ -31,6 +31,7 @@ public class EnemyManager {
 
     private Sound attackSound;
     private Sound hitSound;
+    private boolean isHit = false;
 
     public EnemyManager(Texture spriteSheet) {
         animationSetZombie = new AnimationSetZombie(spriteSheet);
@@ -75,12 +76,13 @@ public class EnemyManager {
     }
 
     public void updateAnimationState() {
-        if (currentAnimationState == ZombieAnimationType.HIT) {
+        if (isHit) {
+            currentAnimationState= ZombieAnimationType.HIT;
             Animation<TextureRegion> hitAnimation = animationSetZombie.getAnimation(currentAnimationState);
             if (hitAnimation.isAnimationFinished(stateTime)) {
                 stateTime = 0f;
-                currentAnimationState = ZombieAnimationType.IDLE; // Transition back to idle after hit
-            }else {
+                isHit = false;
+            } else {
                 return;
             }
         }
@@ -198,9 +200,8 @@ public class EnemyManager {
             if (characterRect.overlaps(bullet.getBoundingRectangle())) {
                 bulletIterator.remove();
                 hitSound.play();
-                currentAnimationState = ZombieAnimationType.HIT; // Switch to hit animation
-                stateTime = 0f; // Reset state time for the hit animation
-                // Handle collision (e.g., reduce health, trigger an effect, etc.)
+                isHit = true;
+                stateTime = 0f;
             }
         }
     }
