@@ -11,13 +11,15 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import krazy.cat.games.AnimationSetAgent.AnimationType;
 
 public class CharacterManager {
+    // ToDo: make this a base class and inherit:
+    //  Player and Enemy --> there will be further baseclasses
+    // ToDo: maybe "interface" for rectangular collisions
     public static final float MOVE_SPEED = 100.f;
     public static final float RUN_SPEED = 300.f;
     public static final float JUMP_SPEED = 1000.f;

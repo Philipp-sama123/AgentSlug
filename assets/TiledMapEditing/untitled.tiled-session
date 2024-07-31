@@ -9,11 +9,11 @@
     ],
     "fileStates": {
         "AgentSlug_Map.tmx": {
-            "scale": 1.0643,
-            "selectedLayer": 0,
+            "scale": 0.6896,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 764.3521563468946,
-                "y": 9452.222117823922
+                "x": 1384.1357308584688,
+                "y": 9401.102088167056
             }
         },
         "Nature.tsx": {
