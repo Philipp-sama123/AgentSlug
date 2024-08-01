@@ -17,9 +17,42 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.awt.dnd.DnDConstants;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+// Dice Rolls
+// Predefined characters
+// ToDo: Do you want to make na rpg
+// TODO:
+//  BUILDING WORLDS (!)
+//  I think this is te clue
+//  Build your own world
+//  but in a controlled way
+//
+//  ToDo:
+//        People like building worlds
+//            DnDConstants
+//          Boh... I guess you can do this somwhow
+//          like build a world to go to the boss
+//              Dungeon Crawler -- Wizadry
+
+
+// ToDo: what to doo ..
+//      make this a "game class"
+//      will handle the game loop ...
+//      then we need a main screeen
+//      and a pause screens
+//      maybe npc`s
+//      ...and multiple enemies so you will do oop
+//      ...in Java.. so good (!)
+//      --- generate enemies on dice rolls in duneons ----
+//      abilities - at least strength-damage, agility-dodge chance, what else u can so with the sprite sheet
+//         luck when u do dice rolls -what u will do
+
+
+
 
 public class AgentSlug extends Game {
     public static final int SCALE = 5;

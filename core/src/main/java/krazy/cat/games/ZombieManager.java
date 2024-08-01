@@ -103,7 +103,7 @@ public class ZombieManager {
             currentAnimationState = attacking ? ZombieAnimationType.ATTACK : ZombieAnimationType.IDLE;
         }
 
-        // Reset horizontal velocity after applying movement
+        // Reset horizontal velocity after applying
         velocity.x = 0;
     }
 
