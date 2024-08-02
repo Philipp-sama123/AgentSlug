@@ -1,6 +1,7 @@
 package krazy.cat.games;
 
-import static krazy.cat.games.AgentSlug.SCALE;
+
+import static krazy.cat.games.GameLoop.SCALE;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;

@@ -1,6 +1,6 @@
 package krazy.cat.games;
 
-import static krazy.cat.games.AgentSlug.SCALE;
+import static krazy.cat.games.GameLoop.SCALE;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;

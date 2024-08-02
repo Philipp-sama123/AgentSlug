@@ -5,7 +5,7 @@ import com.badlogic.gdx.InputProcessor;
 
 public class InputHandler implements InputProcessor {
 
-    private final AgentSlug game;
+    private final GameLoop game;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
@@ -13,7 +13,7 @@ public class InputHandler implements InputProcessor {
     private boolean runRightPressed = false;
     private boolean attackPressed = false;
 
-    public InputHandler(AgentSlug game) {
+    public InputHandler(GameLoop game) {
         this.game = game;
     }
 
