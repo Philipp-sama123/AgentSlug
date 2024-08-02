@@ -24,7 +24,6 @@ import java.util.List;
 import krazy.cat.games.Characters.BatManager;
 import krazy.cat.games.Characters.CharacterManager;
 import krazy.cat.games.Characters.ZombieManager;
-
 public class GameLoop {
     public static final int SCALE = 5;
     public static final float MAP_SCALE = 5.f; // Scaling factor for the map
@@ -66,6 +65,12 @@ public class GameLoop {
         shapeRenderer = new ShapeRenderer();
         parseCollisionLayer();
         createPlatforms();
+
+        // Clear existing lists
+        bullets.clear();
+        zombies.clear();
+        bats.clear();
+
         spawnCharacter();
         spawnZombies();
         spawnBats();
@@ -286,8 +291,8 @@ public class GameLoop {
     private void renderPlatforms() {
         shapeRenderer.setProjectionMatrix(camera.combined);
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.RED);
         for (Rectangle platform : platforms) {
             shapeRenderer.rect(platform.x, platform.y, platform.width, platform.height);
         }
@@ -299,6 +304,13 @@ public class GameLoop {
         platforms.add(new Rectangle(400, 300, 200, 20));  // Platform 2
         platforms.add(new Rectangle(700, 450, 200, 20));  // Platform 3
         // Add more platforms as needed
+//        platforms.add(new Rectangle(2300, 600, 200, 20));    // Platform 4
+//        platforms.add(new Rectangle(3100, 750, 200, 20));    // Platform 5
+//        platforms.add(new Rectangle(3900, 900, 200, 20));    // Platform 6
+//        platforms.add(new Rectangle(4700, 1050, 200, 20));   // Platform 7
+//        platforms.add(new Rectangle(5500, 1200, 200, 20));   // Platform 8
+//        platforms.add(new Rectangle(6300, 1350, 200, 20));   // Platform 9
+//        platforms.add(new Rectangle(7100, 1500, 200, 20));   // Platform 10
     }
 
     private void createTextToShow() {
