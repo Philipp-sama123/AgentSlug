@@ -24,6 +24,7 @@ import java.util.List;
 import krazy.cat.games.Characters.BatManager;
 import krazy.cat.games.Characters.CharacterManager;
 import krazy.cat.games.Characters.ZombieManager;
+
 public class GameLoop {
     public static final int SCALE = 5;
     public static final float MAP_SCALE = 5.f; // Scaling factor for the map
@@ -47,6 +48,7 @@ public class GameLoop {
 
     private List<Rectangle> platforms = new ArrayList<>();
     private List<Rectangle> tiledRectangles = new ArrayList<>();
+    public boolean isDebugging = false;
 
     public void create() {
         batch = new SpriteBatch();
@@ -119,7 +121,11 @@ public class GameLoop {
         batch.end();
 
         // debugRendering
-        renderCharacterRectangle();
+        if (isDebugging) {
+            renderCharacterRectangle();
+            renderZombieRectangles();
+            renderBatRectangles();
+        }
         renderPlatforms();
     }
 
@@ -285,6 +291,28 @@ public class GameLoop {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(characterRect.x, characterRect.y, characterRect.width, characterRect.height);
+        shapeRenderer.end();
+    }
+
+    private void renderZombieRectangles() {
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GREEN);
+        for (ZombieManager zombie : zombies) {
+            Rectangle zombieRect = zombie.getMainZombieRectangle();
+            shapeRenderer.rect(zombieRect.x, zombieRect.y, zombieRect.width, zombieRect.height);
+        }
+        shapeRenderer.end();
+    }
+
+    private void renderBatRectangles() {
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.BLUE);
+        for (BatManager bat : bats) {
+            Rectangle batRect = bat.getBatRectangle();
+            shapeRenderer.rect(batRect.x, batRect.y, batRect.width, batRect.height);
+        }
         shapeRenderer.end();
     }
 

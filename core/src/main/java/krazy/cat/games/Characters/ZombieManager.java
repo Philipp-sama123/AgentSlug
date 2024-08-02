@@ -137,7 +137,7 @@ public class ZombieManager {
     }
 
     private void handleRectangleCollisions(List<Rectangle> rectangles) {
-        Rectangle characterRect = getMainCharacterRectangle();
+        Rectangle characterRect = getMainZombieRectangle();
 
         for (Rectangle rectangle : rectangles) {
             if (characterRect.overlaps(rectangle)) {
@@ -184,7 +184,7 @@ public class ZombieManager {
         return currentFrame != null ? currentFrame.getRegionWidth() : 0;
     }
 
-    public Rectangle getMainCharacterRectangle() {
+    public Rectangle getMainZombieRectangle() {
         TextureRegion currentFrame = getCurrentFrame();
         return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 250, currentFrame.getRegionHeight() * SCALE - 100);
     }
@@ -192,7 +192,7 @@ public class ZombieManager {
     public void checkBulletCollisions(List<Bullet> bullets) {
         if (isDead) return;
 
-        Rectangle characterRect = getMainCharacterRectangle();
+        Rectangle characterRect = getMainZombieRectangle();
         Iterator<Bullet> bulletIterator = bullets.iterator();
 
         while (bulletIterator.hasNext()) {

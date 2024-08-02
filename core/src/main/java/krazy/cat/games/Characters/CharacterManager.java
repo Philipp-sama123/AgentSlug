@@ -19,9 +19,6 @@ import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent.AnimationType;
 import krazy.cat.games.Bullet;
 
 public class CharacterManager {
-    // ToDo: make this a base class and inherit:
-    //  Player and Enemy --> there will be further baseclasses
-    // ToDo: maybe "interface" for rectangular collisions
     public static final float MOVE_SPEED = 100.f;
     public static final float RUN_SPEED = 300.f;
     public static final float JUMP_SPEED = 1000.f;
@@ -34,6 +31,9 @@ public class CharacterManager {
     private boolean facingRight = false;
     private AnimationType currentAnimationState = AnimationType.IDLE;
     private boolean shooting = false;
+    private int jumpCount = 0;  // Variable to track jump count
+    private boolean jumpPressedLastFrame = false; // Track if jump button was pressed last frame
+    private static final int MAX_JUMPS = 2; // Maximum number of jumps allowed
 
     private Sound jumpSound;
     private Sound shootSound;
@@ -57,6 +57,7 @@ public class CharacterManager {
         currentAnimationState = AnimationType.IDLE;
         velocity.set(0, 0);
         shooting = false;
+        jumpCount = 0; // Reset jump count
     }
 
     public void dispose() {
@@ -126,6 +127,7 @@ public class CharacterManager {
                 if (velocity.y < 0 && mainCharacter.y + characterRect.height / 2 >= (rectangle.y + rectangle.height)) {
                     mainCharacter.y = rectangle.y + rectangle.height;
                     velocity.y = 0;
+                    jumpCount = 0; // Reset jump count when landing on a platform
                 }
             }
         }
@@ -145,6 +147,7 @@ public class CharacterManager {
     private void landOnGround() {
         mainCharacter.y = 0.f;
         velocity.y = 0;
+        jumpCount = 0; // Reset jump count when landing on the ground
         if (!shooting) {
             currentAnimationState = AnimationType.IDLE;
         }
@@ -153,8 +156,10 @@ public class CharacterManager {
     public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean jump) {
         boolean isRunning = runLeft || runRight;
 
-        if (jump && canJump()) {
-            velocity.y += JUMP_SPEED;
+        if (jump && !jumpPressedLastFrame && jumpCount < MAX_JUMPS) {
+           // velocity.y += JUMP_SPEED;
+           velocity.y = JUMP_SPEED;
+            jumpCount++;
             jumpSound.play();
         }
 
@@ -168,6 +173,8 @@ public class CharacterManager {
 
         mainCharacter.y += velocity.y * deltaTime;
         mainCharacter.x += velocity.x * deltaTime;
+
+        jumpPressedLastFrame = jump; // Update jump button state
     }
 
     private void adjustFrameOrientation(TextureRegion frame) {
@@ -201,7 +208,6 @@ public class CharacterManager {
         stateTime = 0f; // Reset state time to start animation from the beginning
         shootSound.play();
         return new Bullet(bulletPosition, facingRight);
-
     }
 
     public void checkBulletCollisions(List<Bullet> bullets) {
@@ -219,8 +225,6 @@ public class CharacterManager {
     }
 
     public void renderCharacter(Batch batch) {
-        batch.draw(getCurrentFrame(), getMainCharacter().x, getMainCharacter().y,
-            64 * SCALE, 64 * SCALE);
-
+        batch.draw(getCurrentFrame(), getMainCharacter().x, getMainCharacter().y, 64 * SCALE, 64 * SCALE);
     }
 }
