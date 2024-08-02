@@ -34,6 +34,10 @@ public class BatManager {
     private boolean attacking = false;
     private boolean facingRight = false;
 
+    private int health = 100; // Initial health
+    private boolean isDead = false; // To track if the zombie is dead
+    private boolean isDisposable = false;
+
     public BatManager(Texture spriteSheet) {
         animationSetBat = new AnimationSetBat(spriteSheet);
         resetBatPosition();
@@ -77,6 +81,15 @@ public class BatManager {
     }
 
     public void updateAnimationState() {
+        if (isDead) {
+            currentAnimationState = AnimationSetBat.BatAnimationType.DEATH2;
+            Animation<TextureRegion> deathAnimation = animationSetBat.getAnimation(currentAnimationState);
+            if (deathAnimation.isAnimationFinished(stateTime)) {
+                // Here we can mark the zombie for removal
+                isDisposable = true;
+            }
+            return;
+        }
         if (isHit) {
             currentAnimationState = AnimationSetBat.BatAnimationType.HIT;
             Animation<TextureRegion> hitAnimation = animationSetBat.getAnimation(currentAnimationState);
@@ -203,6 +216,8 @@ public class BatManager {
     }
 
     public void checkBulletCollisions(List<Bullet> bullets) {
+        if(isDead) return;
+
         Rectangle batRect = getBatRectangle();
         Iterator<Bullet> bulletIterator = bullets.iterator();
 
@@ -213,11 +228,38 @@ public class BatManager {
                 hitSound.play();
                 isHit = true;
                 stateTime = 0f;
+                reduceHealth(25);
             }
         }
     }
 
     public void renderCharacter(Batch batch) {
         batch.draw(getCurrentFrame(), batPosition.x, batPosition.y, 40 * SCALE, 42 * SCALE);
+    }
+    public void reduceHealth(int amount) {
+        if (isDead) return; // Do nothing if already dead
+
+        health -= amount;
+        if (health <= 0) {
+            health = 0;
+            triggerDeath();
+        } else {
+            isHit = true;
+            stateTime = 0f;
+        }
+    }
+
+    private void triggerDeath() {
+        isDead = true;
+        currentAnimationState = AnimationSetBat.BatAnimationType.DEATH2;
+        stateTime = 0f;
+    }
+
+    public boolean isDisposable() {
+        return isDisposable;
+    }
+
+    public boolean isDead() {
+        return isDead;
     }
 }

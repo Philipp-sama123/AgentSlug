@@ -211,19 +211,26 @@ public class GameLoop {
             zombie.updateAnimationState();
             zombie.checkBulletCollisions(bullets);
             if (zombie.isDead() && zombie.isDisposable()) {
-             //   zombie.dispose(); // Clean up resources if necessary ToDo: not the spritesheet
+                //   zombie.dispose(); // Clean up resources if necessary ToDo: not the spritesheet
                 zombieIterator.remove(); // Remove from the list
             }
         }
     }
 
     private void updateBats(float deltaTime) {
-        for (BatManager bat : bats) {
+        // With the iterator to prevent : -->  ConcurrentModificationException <--
+        Iterator<BatManager> batIterator = bats.iterator();
+        while (batIterator.hasNext()) {
+            BatManager bat = batIterator.next();
             bat.update(deltaTime);
             bat.moveBatTowardsCharacter(characterManager, deltaTime);
             bat.handleCollisions(platforms, tiledRectangles);
             bat.updateAnimationState();
             bat.checkBulletCollisions(bullets);
+            if (bat.isDead() && bat.isDisposable()) {
+                //   zombie.dispose(); // Clean up resources if necessary ToDo: not the spritesheet
+                batIterator.remove(); // Remove from the list
+            }
         }
     }
 
