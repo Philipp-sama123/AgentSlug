@@ -1,4 +1,4 @@
-package krazy.cat.games;
+package krazy.cat.games.Characters.AnimationSets;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -7,37 +7,37 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class AnimationSetZombie {
+public class AnimationSetBat {
     private static final float FRAME_DURATION = 0.1f;
-    private static final int FRAME_WIDTH = 64;
-    private static final int FRAME_HEIGHT = 64;
+    private static final int FRAME_WIDTH = 40;
+    private static final int FRAME_HEIGHT = 42;
     private static final int SPRITE_SHEET_COLUMNS = 10; // 10 frames per row
 
-    public enum ZombieAnimationType {
-        IDLE, WALK, ATTACK, EAT_PREY, WALK_ATTACK, HIT, DEATH, CRAWL_IDLE, CRAWL, CRAWL_EAT_PREY, CRAWL_DEATH
+    public enum BatAnimationType {
+        IDLE1, IDLE2, APPEARANCE, MOVE1, MOVE2, TURN_AROUND, DASH, GRAB, GRAB2, HIT, DEATH1, DEATH2
     }
 
-    private final Map<ZombieAnimationType, Animation<TextureRegion>> animations;
+    private final Map<BatAnimationType, Animation<TextureRegion>> animations;
     private boolean flipped = false;
 
-    public AnimationSetZombie(Texture spriteSheet) {
+    public AnimationSetBat(Texture spriteSheet) {
         TextureRegion[][] textureRegions = TextureRegion.split(spriteSheet, FRAME_WIDTH, FRAME_HEIGHT);
-        animations = new EnumMap<>(ZombieAnimationType.class);
+        animations = new EnumMap<>(BatAnimationType.class);
+        animations.put(BatAnimationType.IDLE1, createAnimation(textureRegions, 0, 0, 16));
+        animations.put(BatAnimationType.APPEARANCE, createAnimation(textureRegions, 1, 6, 4));
+        animations.put(BatAnimationType.MOVE1, createAnimation(textureRegions, 2, 0, 12));
+        animations.put(BatAnimationType.TURN_AROUND, createAnimation(textureRegions, 3, 2, 3));
+        animations.put(BatAnimationType.MOVE2, createAnimation(textureRegions, 3, 5, 7));
+        animations.put(BatAnimationType.DASH, createAnimation(textureRegions, 4, 2, 15));
+        animations.put(BatAnimationType.GRAB, createAnimation(textureRegions, 5, 7, 9));
+        animations.put(BatAnimationType.GRAB2, createAnimation(textureRegions, 6, 6, 3));
+        animations.put(BatAnimationType.HIT, createAnimation(textureRegions, 6, 9, 3));
+        animations.put(BatAnimationType.DEATH1, createAnimation(textureRegions, 7, 2, 18));
+        animations.put(BatAnimationType.DEATH2, createAnimation(textureRegions, 9, 0, 6));
 
-        animations.put(ZombieAnimationType.IDLE, createAnimation(textureRegions, 0, 0, 7));
-        animations.put(ZombieAnimationType.WALK, createAnimation(textureRegions, 0, 7, 8));
-        animations.put(ZombieAnimationType.ATTACK, createAnimation(textureRegions, 1, 5, 6));
-        animations.put(ZombieAnimationType.EAT_PREY, createAnimation(textureRegions, 2, 1, 5));
-        animations.put(ZombieAnimationType.WALK_ATTACK, createAnimation(textureRegions, 2, 6, 8));
-        animations.put(ZombieAnimationType.HIT, createAnimation(textureRegions, 3, 6, 3)); // actually it starts at 4 but the effect should start immediately and its 5 frames long actually
-        animations.put(ZombieAnimationType.DEATH, createAnimation(textureRegions, 4, 0, 14));
-        animations.put(ZombieAnimationType.CRAWL_IDLE, createAnimation(textureRegions, 5, 4, 6));
-        animations.put(ZombieAnimationType.CRAWL, createAnimation(textureRegions, 6, 0, 6));
-        animations.put(ZombieAnimationType.CRAWL_EAT_PREY, createAnimation(textureRegions, 6, 6, 5));
-        animations.put(ZombieAnimationType.CRAWL_DEATH, createAnimation(textureRegions, 7, 1, 7));
 
         // Debug: Check that all animations are created
-        for (ZombieAnimationType type : ZombieAnimationType.values()) {
+        for (BatAnimationType type : BatAnimationType.values()) {
             if (animations.get(type) == null) {
                 System.err.println("Animation " + type + " is null");
             } else {
@@ -64,7 +64,7 @@ public class AnimationSetZombie {
         return new Animation<>(FRAME_DURATION, frames);
     }
 
-    public TextureRegion getFrame(ZombieAnimationType type, float stateTime, boolean looping) {
+    public TextureRegion getFrame(BatAnimationType type, float stateTime, boolean looping) {
         Animation<TextureRegion> animation = animations.get(type);
         if (animation == null) {
             throw new IllegalStateException("Animation " + type + " not found");
@@ -72,7 +72,7 @@ public class AnimationSetZombie {
         return animation.getKeyFrame(stateTime, looping);
     }
 
-    public Animation<TextureRegion> getAnimation(ZombieAnimationType type) {
+    public Animation<TextureRegion> getAnimation(BatAnimationType type) {
         Animation<TextureRegion> animation = animations.get(type);
         if (animation == null) {
             throw new IllegalStateException("Animation " + type + " not found");

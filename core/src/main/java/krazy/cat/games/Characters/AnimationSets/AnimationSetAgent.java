@@ -1,4 +1,4 @@
-package krazy.cat.games;
+package krazy.cat.games.Characters.AnimationSets;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;

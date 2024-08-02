@@ -1,4 +1,4 @@
-package krazy.cat.games;
+package krazy.cat.games.Characters;
 
 import static krazy.cat.games.GameLoop.SCALE;
 
@@ -14,7 +14,9 @@ import com.badlogic.gdx.math.Vector2;
 import java.util.Iterator;
 import java.util.List;
 
-import krazy.cat.games.AnimationSetAgent.AnimationType;
+import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent;
+import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent.AnimationType;
+import krazy.cat.games.Bullet;
 
 public class CharacterManager {
     // ToDo: make this a base class and inherit:

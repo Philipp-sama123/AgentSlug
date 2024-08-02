@@ -1,4 +1,4 @@
-package krazy.cat.games;
+package krazy.cat.games.Characters;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
@@ -11,6 +11,9 @@ import com.badlogic.gdx.math.Vector2;
 
 import java.util.Iterator;
 import java.util.List;
+
+import krazy.cat.games.Bullet;
+import krazy.cat.games.Characters.AnimationSets.AnimationSetBat;
 
 public class BatManager {
     public static final float MOVE_SPEED = 150.f;

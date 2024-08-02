@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import krazy.cat.games.Characters.BatManager;
+import krazy.cat.games.Characters.CharacterManager;
+import krazy.cat.games.Characters.ZombieManager;
+
 public class GameLoop {
     public static final int SCALE = 5;
     public static final float MAP_SCALE = 5.f; // Scaling factor for the map
