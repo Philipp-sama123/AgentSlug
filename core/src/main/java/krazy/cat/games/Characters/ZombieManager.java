@@ -35,6 +35,11 @@ public class ZombieManager {
     private Sound hitSound;
     private boolean isHit = false;
 
+    private int health = 100; // Initial health
+    private boolean isDead = false; // To track if the zombie is dead
+    private boolean isDisposable = false;
+
+
     public ZombieManager(Texture spriteSheet) {
         animationSetZombie = new AnimationSetZombie(spriteSheet);
         resetCharacterPosition();
@@ -79,6 +84,15 @@ public class ZombieManager {
     }
 
     public void updateAnimationState() {
+        if (isDead) {
+            currentAnimationState = ZombieAnimationType.DEATH;
+            Animation<TextureRegion> deathAnimation = animationSetZombie.getAnimation(currentAnimationState);
+            if (deathAnimation.isAnimationFinished(stateTime)) {
+                // Here we can mark the zombie for removal
+                isDisposable = true;
+            }
+            return;
+        }
         if (isHit) {
             currentAnimationState = ZombieAnimationType.HIT;
             Animation<TextureRegion> hitAnimation = animationSetZombie.getAnimation(currentAnimationState);
@@ -176,6 +190,8 @@ public class ZombieManager {
     }
 
     public void checkBulletCollisions(List<Bullet> bullets) {
+        if (isDead) return;
+
         Rectangle characterRect = getMainCharacterRectangle();
         Iterator<Bullet> bulletIterator = bullets.iterator();
 
@@ -186,6 +202,8 @@ public class ZombieManager {
                 hitSound.play();
                 isHit = true;
                 stateTime = 0f;
+                //ToDo:     reduceHealth(bullet.getDamage()); // Assuming Bullet has a getDamage method
+                reduceHealth(25);
             }
         }
     }
@@ -229,5 +247,32 @@ public class ZombieManager {
         // Update position based on velocity
         mainCharacter.x += velocity.x * deltaTime;
         mainCharacter.y += velocity.y * deltaTime;
+    }
+
+    public void reduceHealth(int amount) {
+        if (isDead) return; // Do nothing if already dead
+
+        health -= amount;
+        if (health <= 0) {
+            health = 0;
+            triggerDeath();
+        } else {
+            isHit = true;
+            stateTime = 0f;
+        }
+    }
+
+    private void triggerDeath() {
+        isDead = true;
+        currentAnimationState = ZombieAnimationType.DEATH;
+        stateTime = 0f;
+    }
+
+    public boolean isDead() {
+        return isDead;
+    }
+
+    public boolean isDisposable() {
+        return isDisposable;
     }
 }

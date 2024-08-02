@@ -201,12 +201,19 @@ public class GameLoop {
     }
 
     private void updateZombies(float deltaTime) {
-        for (ZombieManager zombie : zombies) {
+        // With the iterator to prevent : -->  ConcurrentModificationException <--
+        Iterator<ZombieManager> zombieIterator = zombies.iterator();
+        while (zombieIterator.hasNext()) {
+            ZombieManager zombie = zombieIterator.next();
             zombie.update(deltaTime);
             zombie.moveZombieTowardsCharacter(characterManager, deltaTime);
             zombie.handleCollisions(platforms, tiledRectangles);
             zombie.updateAnimationState();
             zombie.checkBulletCollisions(bullets);
+            if (zombie.isDead() && zombie.isDisposable()) {
+             //   zombie.dispose(); // Clean up resources if necessary ToDo: not the spritesheet
+                zombieIterator.remove(); // Remove from the list
+            }
         }
     }
 
