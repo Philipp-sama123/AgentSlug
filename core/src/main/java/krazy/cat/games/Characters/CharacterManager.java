@@ -8,8 +8,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Timer;
 
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
 import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent;
 import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent.AnimationType;
 import krazy.cat.games.Bullet;
+import krazy.cat.games.Characters.ZombieManager;
 
 public class CharacterManager {
     public static final float MOVE_SPEED = 100.f;
@@ -38,11 +41,32 @@ public class CharacterManager {
     private Sound jumpSound;
     private Sound shootSound;
     private Sound hitSound;
+    private boolean isHit;
+    private TextureRegion[] hitEffect;
+
+    protected float hitEffectStateTime;
+    public boolean isHitEffectPlaying;
+    protected static final float HIT_EFFECT_DURATION = 0.1f;
+
+    private ShaderProgram redShader;
 
     public CharacterManager(Texture spriteSheet) {
         animationSetAgent = new AnimationSetAgent(spriteSheet);
         resetCharacterPosition();
         initializeSounds();
+        loadHitEffect();
+        initializeShaders();
+    }
+
+    private void initializeShaders() {
+        ShaderProgram.pedantic = false;
+        redShader = new ShaderProgram(
+            Gdx.files.internal("Shaders/vertex.glsl"),
+            Gdx.files.internal("Shaders/fragment.glsl")
+        );
+        if (!redShader.isCompiled()) {
+            Gdx.app.error("Shader Error", redShader.getLog());
+        }
     }
 
     private void initializeSounds() {
@@ -62,6 +86,7 @@ public class CharacterManager {
 
     public void dispose() {
         animationSetAgent.dispose();
+        redShader.dispose();
     }
 
     public TextureRegion getCurrentFrame() {
@@ -78,9 +103,22 @@ public class CharacterManager {
         return velocity;
     }
 
+    public void playHitEffect() {
+        isHitEffectPlaying = true;
+        hitEffectStateTime = 0f;
+    }
+
     public void update(float deltaTime) {
         stateTime += deltaTime;
         applyGravity(deltaTime);
+
+        if (isHitEffectPlaying) {
+            hitEffectStateTime += deltaTime;
+            if (hitEffectStateTime > HIT_EFFECT_DURATION * hitEffect.length) {
+                isHitEffectPlaying = false;
+                isHit = false; // Set isHit to false after hit effect has finished playing
+            }
+        }
     }
 
     public void updateAnimationState() {
@@ -114,9 +152,10 @@ public class CharacterManager {
         }
     }
 
-    public void handleCollisions(List<Rectangle> platforms, List<Rectangle> rectangles) {
+    public void handleCollisions(List<Rectangle> platforms, List<Rectangle> rectangles, List<ZombieManager> zombies) {
         handleRectangleCollisions(platforms);
         handleRectangleCollisions(rectangles);
+        handleZombieCollisions(zombies);
     }
 
     private void handleRectangleCollisions(List<Rectangle> rectangles) {
@@ -131,6 +170,49 @@ public class CharacterManager {
                 }
             }
         }
+    }
+
+    private void handleZombieCollisions(List<ZombieManager> zombies) {
+        Rectangle characterRect = getMainCharacterRectangle();
+
+        for (ZombieManager zombie : zombies) {
+            if (characterRect.overlaps(zombie.getMainZombieRectangle()) && !zombie.isDead() && zombie.isAttacking()) {
+                if (!isHit) {
+                    getHit();
+                    playHitEffect();
+                }
+                // Handle collision (e.g., reduce health, trigger an effect, etc.)
+                // Add any additional logic here for when the character collides with a zombie.
+            }
+        }
+    }
+
+    private void loadHitEffect() {
+        hitEffect = new TextureRegion[9];
+
+        // List of file paths for the 10 images
+        String[] hitEffectFilePaths = {
+            "BloodEffect/B001.png",
+            "BloodEffect/B002.png",
+            "BloodEffect/B003.png",
+            "BloodEffect/B004.png",
+            "BloodEffect/B005.png",
+            "BloodEffect/B006.png",
+            "BloodEffect/B007.png",
+            "BloodEffect/B008.png",
+            "BloodEffect/B009.png",
+        };
+
+        // Load each image into the hitEffect array
+        for (int i = 0; i < hitEffectFilePaths.length; i++) {
+            Texture texture = new Texture(Gdx.files.internal(hitEffectFilePaths[i]));
+            hitEffect[i] = new TextureRegion(texture);
+        }
+    }
+
+    private void getHit() {
+        isHit = true;
+        hitSound.play();
     }
 
     private boolean canJump() {
@@ -157,8 +239,7 @@ public class CharacterManager {
         boolean isRunning = runLeft || runRight;
 
         if (jump && !jumpPressedLastFrame && jumpCount < MAX_JUMPS) {
-           // velocity.y += JUMP_SPEED;
-           velocity.y = JUMP_SPEED;
+            velocity.y = JUMP_SPEED;
             jumpCount++;
             jumpSound.play();
         }
@@ -180,6 +261,7 @@ public class CharacterManager {
     private void adjustFrameOrientation(TextureRegion frame) {
         if (facingRight && !animationSetAgent.isFlipped()) {
             animationSetAgent.flipFramesHorizontally();
+
         } else if (!facingRight && animationSetAgent.isFlipped()) {
             animationSetAgent.flipFramesHorizontally();
         }
@@ -225,6 +307,45 @@ public class CharacterManager {
     }
 
     public void renderCharacter(Batch batch) {
-        batch.draw(getCurrentFrame(), getMainCharacter().x, getMainCharacter().y, 64 * SCALE, 64 * SCALE);
+        // Apply red shader if the character is hit
+        if (isHit) {
+            batch.setShader(redShader);
+            redShader.bind();
+            redShader.setUniformf("u_isHit", 1.0f);
+        } else {
+            batch.setShader(null);
+        }
+
+        // Render hit effect if it is playing
+        if (isHitEffectPlaying) {
+            renderHitEffect(batch);
+        }
+
+        // Render the main character
+        batch.draw(getCurrentFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
+
+        // Reset shader after drawing
+        if (isHit) {
+            batch.setShader(null);
+        }
+    }
+
+    private void renderHitEffect(Batch batch) {
+        int frameIndex = (int) (hitEffectStateTime / HIT_EFFECT_DURATION);
+        if (frameIndex < hitEffect.length) {
+            TextureRegion hitFrame = hitEffect[frameIndex];
+
+            Rectangle characterRect = getMainCharacterRectangle();
+            float hitEffectX = characterRect.x + (characterRect.width - hitFrame.getRegionWidth() * 3);
+            float hitEffectY = characterRect.y + (characterRect.height - hitFrame.getRegionHeight() * 3) / 2 + 75;
+
+            batch.draw(
+                hitFrame,
+                hitEffectX,
+                hitEffectY,
+                hitFrame.getRegionWidth() * 3,
+                hitFrame.getRegionHeight() * 3
+            );
+        }
     }
 }

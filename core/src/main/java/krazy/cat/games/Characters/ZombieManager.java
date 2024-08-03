@@ -186,7 +186,7 @@ public class ZombieManager {
 
     public Rectangle getMainZombieRectangle() {
         TextureRegion currentFrame = getCurrentFrame();
-        return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 250, currentFrame.getRegionHeight() * SCALE - 100);
+        return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 50, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 150, currentFrame.getRegionHeight() * SCALE - 100);
     }
 
     public void checkBulletCollisions(List<Bullet> bullets) {

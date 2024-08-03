@@ -116,8 +116,8 @@ public class GameLoop {
         renderBullets(batch);
         renderZombies(batch);
         renderBats(batch);
-        renderScore(batch);
         characterManager.renderCharacter(batch);
+        renderScore(batch);
         batch.end();
 
         // debugRendering
@@ -192,7 +192,7 @@ public class GameLoop {
         // 3.) updateAnimationState
         characterManager.update(deltaTime);
         characterManager.handleInput(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isRunLeftPressed(), inputHandler.isRunRightPressed(), inputHandler.isJumpPressed());
-        characterManager.handleCollisions(platforms, tiledRectangles);
+        characterManager.handleCollisions(platforms, tiledRectangles,zombies);
         characterManager.updateAnimationState();
 
         // Attack Input
@@ -281,7 +281,7 @@ public class GameLoop {
     }
 
     private void renderScore(Batch batch) {
-        textToShow.draw(batch, String.valueOf(score), 100, 200);
+        textToShow.draw(batch, String.valueOf(score), 0, 0);
     }
 
     private void renderCharacterRectangle() {
