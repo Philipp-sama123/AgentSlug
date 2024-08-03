@@ -147,10 +147,12 @@ public class CharacterManager {
         }
     }
 
-    public void handleCollisions(List<Rectangle> platforms, List<Rectangle> rectangles, List<ZombieManager> zombies) {
+    public void handleCollisions(List<Rectangle> platforms, List<Rectangle> rectangles, List<ZombieManager> zombies, List<BatManager> bats, List<Bullet> bullets) {
         handleRectangleCollisions(platforms);
         handleRectangleCollisions(rectangles);
         handleZombieCollisions(zombies);
+        handleBatCollisions(bats);
+        handleBulletCollisions(bullets);
     }
 
     private void handleRectangleCollisions(List<Rectangle> rectangles) {
@@ -172,6 +174,21 @@ public class CharacterManager {
 
         for (ZombieManager zombie : zombies) {
             if (characterRect.overlaps(zombie.getMainZombieRectangle()) && !zombie.isDead() && zombie.isAttacking()) {
+                if (!isHit) {
+                    getHit();
+                    playHitEffect();
+                }
+                // Handle collision (e.g., reduce health, trigger an effect, etc.)
+                // Add any additional logic here for when the character collides with a zombie.
+            }
+        }
+    }
+
+    private void handleBatCollisions(List<BatManager> bats) {
+        Rectangle characterRect = getMainCharacterRectangle();
+
+        for (BatManager bat : bats) {
+            if (characterRect.overlaps(bat.getBatRectangle()) && !bat.isDead() && bat.isAttacking()) {
                 if (!isHit) {
                     getHit();
                     playHitEffect();
@@ -273,22 +290,23 @@ public class CharacterManager {
         float bulletOffsetY = 117.5f; // Adding an offset of 50 to the top
         float bulletOffsetX = facingRight ? 64 * SCALE - 50 : -64 * SCALE + 275; // Different x starting positions depending on the direction
 
-        Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
+        Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + (float) getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
         shooting = true; // Set shooting flag to true
         stateTime = 0f; // Reset state time to start animation from the beginning
         shootSound.play();
         return new Bullet(bulletPosition, facingRight);
     }
 
-    public void checkBulletCollisions(List<Bullet> bullets) {
+    public void handleBulletCollisions(List<Bullet> bullets) {
         Rectangle characterRect = getMainCharacterRectangle();
         Iterator<Bullet> bulletIterator = bullets.iterator();
 
         while (bulletIterator.hasNext()) {
             Bullet bullet = bulletIterator.next();
             if (characterRect.overlaps(bullet.getBoundingRectangle())) {
-                bulletIterator.remove();
-                hitSound.play();
+                //TODO: think of removing or keeping
+                //bulletIterator.remove();
+                //hitSound.play();
                 // Handle collision (e.g., reduce health, trigger an effect, etc.)
             }
         }

@@ -192,7 +192,7 @@ public class GameLoop {
         // 3.) updateAnimationState
         characterManager.update(deltaTime);
         characterManager.handleInput(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isRunLeftPressed(), inputHandler.isRunRightPressed(), inputHandler.isJumpPressed());
-        characterManager.handleCollisions(platforms, tiledRectangles,zombies);
+        characterManager.handleCollisions(platforms, tiledRectangles, zombies, bats, bullets);
         characterManager.updateAnimationState();
 
         // Attack Input
@@ -200,7 +200,6 @@ public class GameLoop {
             Bullet bullet = characterManager.shoot();
             bullets.add(bullet);
         }
-        characterManager.checkBulletCollisions(bullets);
     }
 
     private void updateBullets(float deltaTime) {
@@ -254,8 +253,8 @@ public class GameLoop {
     private void updateCamera() {
         // Update the camera position to follow the character
         Vector2 characterPosition = characterManager.getMainCharacter();
-        float cameraX = characterPosition.x + characterManager.getCurrentFrame().getRegionWidth() / 2;
-        float cameraY = characterPosition.y + characterManager.getCurrentFrame().getRegionHeight() / 2;
+        float cameraX = characterPosition.x + (float) characterManager.getCurrentFrame().getRegionWidth() / 2;
+        float cameraY = characterPosition.y + (float) characterManager.getCurrentFrame().getRegionHeight() / 2;
 
         // Keep the camera within the bounds of the map
         camera.position.set(
