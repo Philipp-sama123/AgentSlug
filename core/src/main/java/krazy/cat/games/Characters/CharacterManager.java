@@ -11,15 +11,13 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Timer;
 
 import java.util.Iterator;
 import java.util.List;
 
+import krazy.cat.games.Bullet;
 import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent;
 import krazy.cat.games.Characters.AnimationSets.AnimationSetAgent.AnimationType;
-import krazy.cat.games.Bullet;
-import krazy.cat.games.Characters.ZombieManager;
 
 public class CharacterManager {
     public static final float MOVE_SPEED = 100.f;
@@ -45,7 +43,6 @@ public class CharacterManager {
     private TextureRegion[] hitEffect;
 
     protected float hitEffectStateTime;
-    public boolean isHitEffectPlaying;
     protected static final float HIT_EFFECT_DURATION = 0.1f;
 
     private ShaderProgram redShader;
@@ -72,7 +69,7 @@ public class CharacterManager {
     private void initializeSounds() {
         jumpSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Jump.wav"));
         shootSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Shoot.wav"));
-        hitSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Hit.wav"));
+        hitSound = Gdx.audio.newSound(Gdx.files.internal("SFX/PlayerHit.wav"));
     }
 
     public void resetCharacterPosition() {
@@ -90,9 +87,8 @@ public class CharacterManager {
     }
 
     public TextureRegion getCurrentFrame() {
-        TextureRegion frame = animationSetAgent.getFrame(currentAnimationState, stateTime, true);
-        adjustFrameOrientation(frame);
-        return frame;
+        adjustFrameOrientation();
+        return animationSetAgent.getFrame(currentAnimationState, stateTime, true);
     }
 
     public Vector2 getMainCharacter() {
@@ -104,7 +100,7 @@ public class CharacterManager {
     }
 
     public void playHitEffect() {
-        isHitEffectPlaying = true;
+        isHit = true;
         hitEffectStateTime = 0f;
     }
 
@@ -112,10 +108,9 @@ public class CharacterManager {
         stateTime += deltaTime;
         applyGravity(deltaTime);
 
-        if (isHitEffectPlaying) {
+        if (isHit) {
             hitEffectStateTime += deltaTime;
             if (hitEffectStateTime > HIT_EFFECT_DURATION * hitEffect.length) {
-                isHitEffectPlaying = false;
                 isHit = false; // Set isHit to false after hit effect has finished playing
             }
         }
@@ -215,13 +210,6 @@ public class CharacterManager {
         hitSound.play();
     }
 
-    private boolean canJump() {
-        return currentAnimationState != AnimationType.JUMP
-            && currentAnimationState != AnimationType.FALL
-            && currentAnimationState != AnimationType.FALL_SHOOT
-            && currentAnimationState != AnimationType.JUMP_SHOOT;
-    }
-
     public boolean isShooting() {
         return shooting;
     }
@@ -258,7 +246,7 @@ public class CharacterManager {
         jumpPressedLastFrame = jump; // Update jump button state
     }
 
-    private void adjustFrameOrientation(TextureRegion frame) {
+    private void adjustFrameOrientation() {
         if (facingRight && !animationSetAgent.isFlipped()) {
             animationSetAgent.flipFramesHorizontally();
 
@@ -317,7 +305,7 @@ public class CharacterManager {
         }
 
         // Render hit effect if it is playing
-        if (isHitEffectPlaying) {
+        if (isHit) {
             renderHitEffect(batch);
         }
 

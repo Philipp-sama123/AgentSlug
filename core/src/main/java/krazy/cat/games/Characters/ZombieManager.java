@@ -47,7 +47,7 @@ public class ZombieManager {
     }
 
     private void initializeSounds() {
-        attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Shoot.wav"));
+        attackSound = Gdx.audio.newSound(Gdx.files.internal("SFX/ZombieAttack.wav"));
         hitSound = Gdx.audio.newSound(Gdx.files.internal("SFX/Hit.wav"));
     }
 
