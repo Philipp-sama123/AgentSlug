@@ -5,11 +5,13 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -23,6 +25,8 @@ public class GameScreen implements Screen {
     private final GameLoop gameLoop;
     private Stage stage;
     private ImageButton pauseButton;
+    private ImageButton shootButton;
+
     private InputMultiplexer inputMultiplexer;
 
     private Touchpad joystick; // Joystick instance
@@ -43,6 +47,7 @@ public class GameScreen implements Screen {
 
         // Create the pause button
         createPauseButton();
+        createShootButton();
         createJoystick();
     }
 
@@ -123,6 +128,26 @@ public class GameScreen implements Screen {
         stage.addActor(table);
     }
 
+    private void createShootButton() {
+        // Load texture for pause button
+        Texture shootTextureUp = new Texture(Gdx.files.internal("UI/GrayButtons/Arrow left.png"));
+        Texture shootTextureDown = new Texture(Gdx.files.internal("UI/YellowButtons/Arrow left.png"));
+        ImageButton.ImageButtonStyle shootStylePause = new ImageButton.ImageButtonStyle();
+
+        shootStylePause.up = new TextureRegionDrawable(shootTextureUp);
+        shootStylePause.down = new TextureRegionDrawable(shootTextureDown);
+
+        shootButton = new ImageButton(shootStylePause);
+
+        // Arrange button in a table
+        Table table = new Table();
+        table.setFillParent(true);
+        table.bottom().right();
+        table.add(shootButton).size(200, 200).pad(200);
+
+        stage.addActor(table);
+    }
+
     @Override
     public void show() {
     }
@@ -139,6 +164,7 @@ public class GameScreen implements Screen {
             gameLoop.render();
         }
         gameLoop.getInputHandler().updateJoystickMovement(this);
+        gameLoop.getInputHandler().setShootPressed(shootButton.isPressed());
 
         // Draw the stage (buttons, etc.)
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));

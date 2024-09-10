@@ -40,6 +40,10 @@ public class InputHandler implements InputProcessor {
         return jumpPressed;
     }
 
+    public void setShootPressed(boolean shootPressed) {
+        attackPressed = shootPressed;
+    }
+
     public boolean isAttackPressed() {
         return attackPressed;
     }
