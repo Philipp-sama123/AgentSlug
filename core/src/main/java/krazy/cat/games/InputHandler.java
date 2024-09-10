@@ -3,9 +3,10 @@ package krazy.cat.games;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 
+import krazy.cat.games.UI.GameScreen;
+
 public class InputHandler implements InputProcessor {
 
-    private final GameLoop game;
     private boolean leftPressed = false;
     private boolean rightPressed = false;
     private boolean jumpPressed = false;
@@ -13,8 +14,18 @@ public class InputHandler implements InputProcessor {
     private boolean runRightPressed = false;
     private boolean attackPressed = false;
 
-    public InputHandler(GameLoop game) {
-        this.game = game;
+    public void updateJoystickMovement(GameScreen gameScreen) {
+        // Use joystick input to set movement flags
+        if (gameScreen.getJoystick() != null) {
+            float joystickX = gameScreen.getJoystick().getKnobPercentX(); // Knob percentage movement on the X-axis
+            leftPressed = joystickX < -0.1f;   // Move left if joystick is pushed left
+            rightPressed = joystickX > 0.1f;   // Move right if joystick is pushed right
+            runLeftPressed = joystickX < -0.75f;
+            runRightPressed = joystickX > 0.75f;
+
+            jumpPressed = gameScreen.getJoystick().getKnobPercentY() > 0.75;
+            attackPressed = gameScreen.getJoystick().getKnobPercentY() < -0.5;
+        }
     }
 
     public boolean isLeftPressed() {
@@ -51,26 +62,13 @@ public class InputHandler implements InputProcessor {
         float leftWidth = width / 3;
         float rightWidth = 2 * width / 3;
         float topHeight = height / 2;
-        float bottomHeight = height;
 
-        if (screenX < leftWidth && screenY < topHeight) {
-            // Top-left: Run Left
-            runLeftPressed = true;
-        } else if (screenX >= leftWidth && screenX < rightWidth && screenY < topHeight) {
+        if (screenX >= leftWidth && screenX < rightWidth && screenY < topHeight) {
             // Top-center: Jump
             jumpPressed = true;
-        } else if (screenX >= rightWidth && screenY < topHeight) {
-            // Top-right: Run Right
-            runRightPressed = true;
-        } else if (screenX < leftWidth && screenY >= topHeight) {
-            // Bottom-left: Walk Left
-            leftPressed = true;
         } else if (screenX >= leftWidth && screenX < rightWidth && screenY >= topHeight) {
             // Bottom-center: Attack
             attackPressed = true;
-        } else if (screenX >= rightWidth && screenY >= topHeight) {
-            // Bottom-right: Walk Right
-            rightPressed = true;
         }
 
         return true;
@@ -86,26 +84,13 @@ public class InputHandler implements InputProcessor {
         float leftWidth = width / 3;
         float rightWidth = 2 * width / 3;
         float topHeight = height / 2;
-        float bottomHeight = height;
 
-        if (screenX < leftWidth && screenY < topHeight) {
-            // Top-left: Run Left
-            runLeftPressed = false;
-        } else if (screenX >= leftWidth && screenX < rightWidth && screenY < topHeight) {
+        if (screenX >= leftWidth && screenX < rightWidth && screenY < topHeight) {
             // Top-center: Jump
             jumpPressed = false;
-        } else if (screenX >= rightWidth && screenY < topHeight) {
-            // Top-right: Run Right
-            runRightPressed = false;
-        } else if (screenX < leftWidth && screenY >= topHeight) {
-            // Bottom-left: Walk Left
-            leftPressed = false;
         } else if (screenX >= leftWidth && screenX < rightWidth && screenY >= topHeight) {
             // Bottom-center: Attack
             attackPressed = false;
-        } else if (screenX >= rightWidth && screenY >= topHeight) {
-            // Bottom-right: Walk Right
-            rightPressed = false;
         }
 
         return true;

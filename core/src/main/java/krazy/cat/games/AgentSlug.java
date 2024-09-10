@@ -9,6 +9,7 @@ import krazy.cat.games.UI.PauseMenuScreen;
 
 public class AgentSlug extends Game {
     private GameLoop gameLoop;
+    private GameScreen gameScreen;
 
     @Override
     public void create() {
@@ -18,7 +19,8 @@ public class AgentSlug extends Game {
     public void startGame() {
         gameLoop = new GameLoop();
         gameLoop.create();
-        setScreen(new GameScreen(this, gameLoop));
+        gameScreen = new GameScreen(this, gameLoop);
+        setScreen(gameScreen);
     }
 
     public void pauseGame() {

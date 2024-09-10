@@ -4,10 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -22,6 +24,9 @@ public class GameScreen implements Screen {
     private Stage stage;
     private ImageButton pauseButton;
     private InputMultiplexer inputMultiplexer;
+
+    private Touchpad joystick; // Joystick instance
+    private Touchpad.TouchpadStyle joystickStyle;
 
     public GameScreen(final AgentSlug game, final GameLoop gameLoop) {
         this.game = game;
@@ -38,6 +43,52 @@ public class GameScreen implements Screen {
 
         // Create the pause button
         createPauseButton();
+        createJoystick();
+    }
+
+    private void createJoystick() {
+        // Load textures for the joystick background and knob
+        Texture joystickBackground = new Texture(Gdx.files.internal("UI/Joystick_Background_Round.png"));
+        Texture joystickKnob = new Texture(Gdx.files.internal("UI/Joystick_Knubble.png"));
+
+        // Check if textures are loaded
+        if (!joystickBackground.getTextureData().isPrepared()) {
+            joystickBackground.getTextureData().prepare();
+        }
+        if (!joystickKnob.getTextureData().isPrepared()) {
+            joystickKnob.getTextureData().prepare();
+        }
+
+        // Create joystick style
+        joystickStyle = new Touchpad.TouchpadStyle();
+
+        // Set background and knob using TextureRegionDrawable
+        joystickStyle.background = new TextureRegionDrawable(new TextureRegion(joystickBackground));
+        joystickStyle.knob = new TextureRegionDrawable(new TextureRegion(joystickKnob));
+
+        // Adjust knob size relative to background
+        TextureRegionDrawable knobDrawable = (TextureRegionDrawable) joystickStyle.knob;
+        float knobWidth = joystickKnob.getWidth();
+        float knobHeight = joystickKnob.getHeight();
+
+        knobDrawable.setMinWidth(knobWidth);  // Adjust knob size if necessary
+        knobDrawable.setMinHeight(knobHeight);
+
+        joystick = new Touchpad(10, joystickStyle);
+
+        // Place the joystick in the bottom left corner
+        Table table = new Table();
+        table.setFillParent(true);
+        table.bottom().left();
+
+        // Use the size of the background texture itself instead of manually setting a size
+        table.add(joystick).size(joystickBackground.getWidth(), joystickBackground.getHeight()).pad(25);
+
+        stage.addActor(table);
+    }
+
+    public Touchpad getJoystick() {
+        return joystick;
     }
 
     private void createPauseButton() {
@@ -73,7 +124,8 @@ public class GameScreen implements Screen {
     }
 
     @Override
-    public void show() {}
+    public void show() {
+    }
 
     @Override
     public void render(float delta) {
@@ -86,6 +138,7 @@ public class GameScreen implements Screen {
         if (!gameLoop.isPaused()) {
             gameLoop.render();
         }
+        gameLoop.getInputHandler().updateJoystickMovement(this);
 
         // Draw the stage (buttons, etc.)
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));

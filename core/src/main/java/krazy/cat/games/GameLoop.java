@@ -1,5 +1,6 @@
 package krazy.cat.games;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
@@ -24,31 +25,28 @@ import java.util.List;
 import krazy.cat.games.Characters.BatManager;
 import krazy.cat.games.Characters.CharacterManager;
 import krazy.cat.games.Characters.ZombieManager;
+import krazy.cat.games.UI.GameScreen;
 
 public class GameLoop {
     public static final int SCALE = 5;
     public static final float MAP_SCALE = 5.f; // Scaling factor for the map
+    public boolean isDebugging = false;
 
     private OrthographicCamera camera;
     private TiledMap tiledMap;
     private OrthogonalTiledMapRenderer mapRenderer;
     private SpriteBatch batch;
     private BitmapFont textToShow;
-
     private int score = 0;
     private boolean isPaused = false; // Pause state flag
-
     private CharacterManager characterManager;
     private InputHandler inputHandler;
     private ShapeRenderer shapeRenderer;
-
     private List<Bullet> bullets = new ArrayList<>();
     private List<ZombieManager> zombies = new ArrayList<>();
     private List<BatManager> bats = new ArrayList<>();
-
     private List<Rectangle> platforms = new ArrayList<>();
     private List<Rectangle> tiledRectangles = new ArrayList<>();
-    public boolean isDebugging = false;
 
     public void create() {
         batch = new SpriteBatch();
@@ -60,8 +58,7 @@ public class GameLoop {
         setupCamera();
 
         createTextToShow();
-
-        inputHandler = new InputHandler(this);
+        inputHandler = new InputHandler();
         Gdx.input.setInputProcessor(inputHandler);
 
         shapeRenderer = new ShapeRenderer();
@@ -155,12 +152,7 @@ public class GameLoop {
             for (int y = 0; y < layerHeight; y++) {
                 TiledMapTileLayer.Cell cell = tileLayer.getCell(x, y);
                 if (cell != null && cell.getTile() != null) {
-                    Rectangle rect = new Rectangle(
-                        x * tileWidth * MAP_SCALE,
-                        y * tileHeight * MAP_SCALE,
-                        tileWidth * MAP_SCALE,
-                        tileHeight * MAP_SCALE
-                    );
+                    Rectangle rect = new Rectangle(x * tileWidth * MAP_SCALE, y * tileHeight * MAP_SCALE, tileWidth * MAP_SCALE, tileHeight * MAP_SCALE);
                     tiledRectangles.add(rect);
                     Gdx.app.log("Collision", "Parsed rectangle: " + rect);
                 }
@@ -180,7 +172,6 @@ public class GameLoop {
         updateCharacter(deltaTime);
         updateBullets(deltaTime);
         updateZombies(deltaTime);
-
         updateBats(deltaTime);
         updateCamera();
     }
@@ -257,13 +248,7 @@ public class GameLoop {
         float cameraY = characterPosition.y + (float) characterManager.getCurrentFrame().getRegionHeight() / 2;
 
         // Keep the camera within the bounds of the map
-        camera.position.set(
-            Math.max(camera.viewportWidth / 2, Math.min(cameraX,
-                tiledMap.getProperties().get("width", Integer.class) * tiledMap.getProperties().get("tilewidth", Integer.class) * MAP_SCALE - camera.viewportWidth / 2)),
-            Math.max(camera.viewportHeight / 2, Math.min(cameraY,
-                tiledMap.getProperties().get("height", Integer.class) * tiledMap.getProperties().get("tileheight", Integer.class) * MAP_SCALE - camera.viewportHeight / 2)),
-            0
-        );
+        camera.position.set(Math.max(camera.viewportWidth / 2, Math.min(cameraX, tiledMap.getProperties().get("width", Integer.class) * tiledMap.getProperties().get("tilewidth", Integer.class) * MAP_SCALE - camera.viewportWidth / 2)), Math.max(camera.viewportHeight / 2, Math.min(cameraY, tiledMap.getProperties().get("height", Integer.class) * tiledMap.getProperties().get("tileheight", Integer.class) * MAP_SCALE - camera.viewportHeight / 2)), 0);
         camera.update();
     }
 
@@ -371,15 +356,15 @@ public class GameLoop {
         }
     }
 
-    public void setPaused(boolean paused) {
-        this.isPaused = paused;
-    }
-
     public boolean isPaused() {
         return isPaused;
     }
 
-    public InputProcessor getInputHandler() {
+    public void setPaused(boolean paused) {
+        this.isPaused = paused;
+    }
+
+    public InputHandler getInputHandler() {
         return inputHandler;
     }
 }
