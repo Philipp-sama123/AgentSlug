@@ -47,8 +47,8 @@ public class CharacterManager {
 
     private ShaderProgram redShader;
 
-    public CharacterManager(Texture spriteSheet) {
-        animationSetAgent = new AnimationSetAgent(spriteSheet);
+    public CharacterManager(Texture upperBodySpriteSheet, Texture lowerBodySpriteSheet) {
+        animationSetAgent = new AnimationSetAgent(upperBodySpriteSheet, lowerBodySpriteSheet);
         resetCharacterPosition();
         initializeSounds();
         loadHitEffect();
@@ -86,9 +86,14 @@ public class CharacterManager {
         redShader.dispose();
     }
 
-    public TextureRegion getCurrentFrame() {
-        adjustFrameOrientation();
-        return animationSetAgent.getFrame(currentAnimationState, stateTime, true);
+    public TextureRegion getCurrentUpperBodyFrame() {
+        adjustUpperBodyFrameOrientation();
+        return animationSetAgent.getLowerBodyFrame(currentAnimationState, stateTime, true);
+    }
+
+    public TextureRegion getCurrentLowerBodyFrame() {
+        adjustLowerBodyFrameOrientation();
+        return animationSetAgent.getUpperBodyFrame(currentAnimationState, stateTime, true);
     }
 
     public Vector2 getMainCharacter() {
@@ -119,7 +124,7 @@ public class CharacterManager {
     public void updateAnimationState() {
         if (shooting) {
             // Check if the shooting animation has finished
-            Animation<TextureRegion> shootAnimation = animationSetAgent.getAnimation(currentAnimationState);
+            Animation<TextureRegion> shootAnimation = animationSetAgent.getUpperBodyAnimation(currentAnimationState);
             if (shootAnimation.isAnimationFinished(stateTime)) {
                 shooting = false;
                 stateTime = 0f;
@@ -263,12 +268,21 @@ public class CharacterManager {
         jumpPressedLastFrame = jump; // Update jump button state
     }
 
-    private void adjustFrameOrientation() {
-        if (facingRight && !animationSetAgent.isFlipped()) {
-            animationSetAgent.flipFramesHorizontally();
+    private void adjustUpperBodyFrameOrientation() {
+        if (facingRight && !animationSetAgent.isUpperBodyFramesFlipped()) {
+            animationSetAgent.flipUpperBodyFramesHorizontally();
 
-        } else if (!facingRight && animationSetAgent.isFlipped()) {
-            animationSetAgent.flipFramesHorizontally();
+        } else if (!facingRight && animationSetAgent.isUpperBodyFramesFlipped()) {
+            animationSetAgent.flipUpperBodyFramesHorizontally();
+        }
+    }
+
+    private void adjustLowerBodyFrameOrientation() {
+        if (facingRight && !animationSetAgent.isLowerBodyFramesFlipped()) {
+            animationSetAgent.flipLowerBodyFramesHorizontally();
+
+        } else if (!facingRight && animationSetAgent.isLowerBodyFramesFlipped()) {
+            animationSetAgent.flipLowerBodyFramesHorizontally();
         }
     }
 
@@ -277,12 +291,12 @@ public class CharacterManager {
     }
 
     private float getCurrentFrameWidth() {
-        TextureRegion currentFrame = getCurrentFrame();
+        TextureRegion currentFrame = getCurrentUpperBodyFrame();
         return currentFrame != null ? currentFrame.getRegionWidth() : 0;
     }
 
     public Rectangle getMainCharacterRectangle() {
-        TextureRegion currentFrame = getCurrentFrame();
+        TextureRegion currentFrame = getCurrentUpperBodyFrame();
         return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 250, currentFrame.getRegionHeight() * SCALE - 100);
     }
 
@@ -290,7 +304,7 @@ public class CharacterManager {
         float bulletOffsetY = 117.5f; // Adding an offset of 50 to the top
         float bulletOffsetX = facingRight ? 64 * SCALE - 50 : -64 * SCALE + 275; // Different x starting positions depending on the direction
 
-        Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + (float) getCurrentFrame().getRegionHeight() / 2 + bulletOffsetY);
+        Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + (float) getCurrentUpperBodyFrame().getRegionHeight() / 2 + bulletOffsetY);
         shooting = true; // Set shooting flag to true
         stateTime = 0f; // Reset state time to start animation from the beginning
         shootSound.play();
@@ -328,7 +342,8 @@ public class CharacterManager {
         }
 
         // Render the main character
-        batch.draw(getCurrentFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
+        batch.draw(getCurrentUpperBodyFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
+        batch.draw(getCurrentLowerBodyFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
 
         // Reset shader after drawing
         if (isHit) {

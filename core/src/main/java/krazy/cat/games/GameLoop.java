@@ -1,8 +1,6 @@
 package krazy.cat.games;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -25,7 +23,6 @@ import java.util.List;
 import krazy.cat.games.Characters.BatManager;
 import krazy.cat.games.Characters.CharacterManager;
 import krazy.cat.games.Characters.ZombieManager;
-import krazy.cat.games.UI.GameScreen;
 
 public class GameLoop {
     public static final int SCALE = 5;
@@ -244,8 +241,8 @@ public class GameLoop {
     private void updateCamera() {
         // Update the camera position to follow the character
         Vector2 characterPosition = characterManager.getMainCharacter();
-        float cameraX = characterPosition.x + (float) characterManager.getCurrentFrame().getRegionWidth() / 2;
-        float cameraY = characterPosition.y + (float) characterManager.getCurrentFrame().getRegionHeight() / 2;
+        float cameraX = characterPosition.x + (float) characterManager.getCurrentUpperBodyFrame().getRegionWidth() / 2;
+        float cameraY = characterPosition.y + (float) characterManager.getCurrentUpperBodyFrame().getRegionHeight() / 2;
 
         // Keep the camera within the bounds of the map
         camera.position.set(Math.max(camera.viewportWidth / 2, Math.min(cameraX, tiledMap.getProperties().get("width", Integer.class) * tiledMap.getProperties().get("tilewidth", Integer.class) * MAP_SCALE - camera.viewportWidth / 2)), Math.max(camera.viewportHeight / 2, Math.min(cameraY, tiledMap.getProperties().get("height", Integer.class) * tiledMap.getProperties().get("tileheight", Integer.class) * MAP_SCALE - camera.viewportHeight / 2)), 0);
@@ -316,13 +313,13 @@ public class GameLoop {
         platforms.add(new Rectangle(400, 300, 200, 20));  // Platform 2
         platforms.add(new Rectangle(700, 450, 200, 20));  // Platform 3
         // Add more platforms as needed
-//        platforms.add(new Rectangle(2300, 600, 200, 20));    // Platform 4
-//        platforms.add(new Rectangle(3100, 750, 200, 20));    // Platform 5
-//        platforms.add(new Rectangle(3900, 900, 200, 20));    // Platform 6
-//        platforms.add(new Rectangle(4700, 1050, 200, 20));   // Platform 7
-//        platforms.add(new Rectangle(5500, 1200, 200, 20));   // Platform 8
-//        platforms.add(new Rectangle(6300, 1350, 200, 20));   // Platform 9
-//        platforms.add(new Rectangle(7100, 1500, 200, 20));   // Platform 10
+        platforms.add(new Rectangle(2300, 600, 200, 20));    // Platform 4
+        platforms.add(new Rectangle(3100, 750, 200, 20));    // Platform 5
+        platforms.add(new Rectangle(3900, 900, 200, 20));    // Platform 6
+        platforms.add(new Rectangle(4700, 1050, 200, 20));   // Platform 7
+        platforms.add(new Rectangle(5500, 1200, 200, 20));   // Platform 8
+        platforms.add(new Rectangle(6300, 1350, 200, 20));   // Platform 9
+        platforms.add(new Rectangle(7100, 1500, 200, 20));   // Platform 10
     }
 
     private void createTextToShow() {
@@ -332,8 +329,9 @@ public class GameLoop {
     }
 
     private void spawnCharacter() {
-        Texture characterTexture = new Texture("GandalfHardcoreFemaleAgent/GandalfHardcore Female Agent black.png");
-        characterManager = new CharacterManager(characterTexture);
+        Texture upperBodyCharacterTexture = new Texture("Character/FemaleAgent/Body/Red.png");
+        Texture lowerBodyCharacterTexture = new Texture("Character/FemaleAgent/Feet/Red.png");
+        characterManager = new CharacterManager(upperBodyCharacterTexture, lowerBodyCharacterTexture);
     }
 
     private void spawnZombies() {

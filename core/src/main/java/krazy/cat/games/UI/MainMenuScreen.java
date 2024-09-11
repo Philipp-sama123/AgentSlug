@@ -33,12 +33,12 @@ public class MainMenuScreen implements Screen {
         baseBackgroundImage.setFillParent(true);
         stage.addActor(baseBackgroundImage);
 
-        Texture backgroundTexture = new Texture(Gdx.files.internal("GandalfHardcoreFemaleAgent/Female Agent Portrait 640x640  (5).png"));
+        Texture backgroundTexture = new Texture(Gdx.files.internal("Character/FemaleAgent/Portrait/Big/Black_640x640.png"));
         Image backgroundImage = new Image(new TextureRegionDrawable(backgroundTexture));
 
         stage.addActor(backgroundImage);
 
-        Texture backgroundTexture2 = new Texture(Gdx.files.internal("GandalfHardcoreFemaleAgent/Female Agent Portrait 640x640  (4).png"));
+        Texture backgroundTexture2 = new Texture(Gdx.files.internal("Character/FemaleAgent/Portrait/Big/Red_640x640.png"));
         Image backgroundImage2 = new Image(new TextureRegionDrawable(backgroundTexture2));
 
         backgroundImage2.setPosition(Gdx.graphics.getWidth() - backgroundImage2.getWidth(), 0);
