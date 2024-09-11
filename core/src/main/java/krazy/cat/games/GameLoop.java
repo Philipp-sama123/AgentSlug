@@ -187,13 +187,18 @@ public class GameLoop {
             inputHandler.isRunLeftPressed(),
             inputHandler.isRunRightPressed(),
             inputHandler.isJumpPressed(),
-            inputHandler.isCrouchPressed()
+            inputHandler.isCrouchPressed(),
+            inputHandler.isShootLeftPressed(),
+            inputHandler.isShootRightPressed()
+
         );
         characterManager.handleCollisions(platforms, tiledRectangles, zombies, bats, bullets);
         characterManager.updateAnimationState();
 
         // Attack Input
-        if (inputHandler.isAttackPressed() && !characterManager.isShooting()) {
+        if (!characterManager.isShooting()
+            && (inputHandler.isShootRightPressed() || inputHandler.isShootLeftPressed())
+        ) {
             Bullet bullet = characterManager.shoot();
             bullets.add(bullet);
         }
@@ -305,6 +310,7 @@ public class GameLoop {
         }
         shapeRenderer.end();
     }
+
     private void renderTiledRectangles() {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);

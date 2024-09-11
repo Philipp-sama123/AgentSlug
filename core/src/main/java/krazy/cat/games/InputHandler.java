@@ -13,8 +13,10 @@ public class InputHandler implements InputProcessor {
     private boolean runRightPressed = false;
     private boolean jumpPressed = false;
     private boolean crouchPressed = false;
-
     private boolean attackPressed = false;
+
+    private boolean shootLeftPressed = false;
+    private boolean shootRightPressed = false;
 
     public void updateJoystickMovement(GameScreen gameScreen) {
         // Use joystick input to set movement flags
@@ -28,10 +30,23 @@ public class InputHandler implements InputProcessor {
             jumpPressed = gameScreen.getMovementJoystick().getKnobPercentY() > 0.75;
             crouchPressed = gameScreen.getMovementJoystick().getKnobPercentY() < -.5;
         }
+        if (gameScreen.getShootingJoystick() != null) {
+            float joystickX = gameScreen.getShootingJoystick().getKnobPercentX(); // Knob percentage movement on the X-axis
+            shootLeftPressed = joystickX < -0.25f;   // Move left if joystick is pushed left
+            shootRightPressed = joystickX > 0.25f;   // Move right if joystick is pushed right
+        }
     }
 
     public boolean isCrouchPressed() {
         return crouchPressed;
+    }
+
+    public boolean isShootLeftPressed() {
+        return shootLeftPressed;
+    }
+
+    public boolean isShootRightPressed() {
+        return shootRightPressed;
     }
 
     public boolean isLeftPressed() {

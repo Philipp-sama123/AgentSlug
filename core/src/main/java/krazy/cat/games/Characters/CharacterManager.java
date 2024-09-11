@@ -254,7 +254,17 @@ public class CharacterManager {
         }
     }
 
-    public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean jump, boolean crouch) {
+    public void handleInput(
+        float deltaTime,
+        boolean moveLeft,
+        boolean moveRight,
+        boolean runLeft,
+        boolean runRight,
+        boolean jump,
+        boolean crouch,
+        boolean shootLeft,
+        boolean shootRight
+    ) {
         boolean isRunning = runLeft || runRight;
         isCrouching = crouch;
 
@@ -267,13 +277,26 @@ public class CharacterManager {
         if (moveLeft || runLeft) {
             velocity.x = -(isRunning ? RUN_SPEED : MOVE_SPEED);
             setFacingRightUpperBody(false);
-            setFacingRightLowerBody(false); // ToDo: make something for -- lookLeft (!!)
+            setFacingRightLowerBody(false);
         } else if (moveRight || runRight) {
             velocity.x = (isRunning ? RUN_SPEED : MOVE_SPEED);
             setFacingRightUpperBody(true);
-            setFacingRightLowerBody(true);// ToDo: make something for -- lookRight (!!)
+            setFacingRightLowerBody(true);
         }
 
+        if (shootLeft) {
+            setFacingRightUpperBody(false);
+            if (!moveLeft && !moveRight && !runLeft && !runRight) {
+                setFacingRightLowerBody(isFacingRightUpperBody);
+            }
+        } else if (shootRight) {
+            setFacingRightUpperBody(true);
+            if (!moveLeft && !moveRight && !runLeft && !runRight) {
+                setFacingRightLowerBody(isFacingRightUpperBody);
+            }
+        } else {
+            setFacingRightUpperBody(isFacingRightLowerBody);
+        }
         mainCharacter.y += velocity.y * deltaTime;
         mainCharacter.x += velocity.x * deltaTime;
 

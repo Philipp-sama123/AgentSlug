@@ -23,12 +23,11 @@ public class GameScreen implements Screen {
     private final GameLoop gameLoop;
     private Stage stage;
     private ImageButton pauseButton;
-    private ImageButton shootButton;
 
     private InputMultiplexer inputMultiplexer;
 
     private Touchpad movementJoystick; // Joystick instance
-    private Touchpad.TouchpadStyle joystickStyle;
+    private Touchpad shootingJoystick; // Joystick instance
 
     public GameScreen(final AgentSlug game, final GameLoop gameLoop) {
         this.game = game;
@@ -43,10 +42,10 @@ public class GameScreen implements Screen {
         inputMultiplexer.addProcessor(gameLoop.getInputHandler());
         Gdx.input.setInputProcessor(inputMultiplexer);
 
-        // Create the pause button
+        // Create UI Elements
         createPauseButton();
-        createShootButton();
         createMovementJoystick();
+        createShootingJoystick();
     }
 
     private void createMovementJoystick() {
@@ -63,21 +62,21 @@ public class GameScreen implements Screen {
         }
 
         // Create joystick style
-        joystickStyle = new Touchpad.TouchpadStyle();
+        Touchpad.TouchpadStyle movementJoystickStyle = new Touchpad.TouchpadStyle();
 
         // Set background and knob using TextureRegionDrawable
-        joystickStyle.background = new TextureRegionDrawable(new TextureRegion(joystickBackground));
-        joystickStyle.knob = new TextureRegionDrawable(new TextureRegion(joystickKnob));
+        movementJoystickStyle.background = new TextureRegionDrawable(new TextureRegion(joystickBackground));
+        movementJoystickStyle.knob = new TextureRegionDrawable(new TextureRegion(joystickKnob));
 
         // Adjust knob size relative to background
-        TextureRegionDrawable knobDrawable = (TextureRegionDrawable) joystickStyle.knob;
+        TextureRegionDrawable knobDrawable = (TextureRegionDrawable) movementJoystickStyle.knob;
         float knobWidth = joystickKnob.getWidth();
         float knobHeight = joystickKnob.getHeight();
 
         knobDrawable.setMinWidth(knobWidth);  // Adjust knob size if necessary
         knobDrawable.setMinHeight(knobHeight);
 
-        movementJoystick = new Touchpad(10, joystickStyle);
+        movementJoystick = new Touchpad(10, movementJoystickStyle);
 
         // Place the joystick in the bottom left corner
         Table table = new Table();
@@ -90,8 +89,50 @@ public class GameScreen implements Screen {
         stage.addActor(table);
     }
 
+    private void createShootingJoystick() {
+        Texture joystickBackground = new Texture(Gdx.files.internal("UI/Joystick_Background_Round.png"));
+        Texture joystickKnob = new Texture(Gdx.files.internal("UI/Joystick_Knubble_Gun.png"));
+
+        if (!joystickBackground.getTextureData().isPrepared()) {
+            joystickBackground.getTextureData().prepare();
+        }
+        if (!joystickKnob.getTextureData().isPrepared()) {
+            joystickKnob.getTextureData().prepare();
+        }
+
+        Touchpad.TouchpadStyle shootingJoystickStyle = new Touchpad.TouchpadStyle();
+
+        // Set background and knob using TextureRegionDrawable
+        shootingJoystickStyle.background = new TextureRegionDrawable(new TextureRegion(joystickBackground));
+        shootingJoystickStyle.knob = new TextureRegionDrawable(new TextureRegion(joystickKnob));
+
+        // Adjust knob size relative to background
+        TextureRegionDrawable knobDrawable = (TextureRegionDrawable) shootingJoystickStyle.knob;
+        float knobWidth = joystickKnob.getWidth();
+        float knobHeight = joystickKnob.getHeight();
+
+        knobDrawable.setMinWidth(knobWidth);  // Adjust knob size if necessary
+        knobDrawable.setMinHeight(knobHeight);
+
+        shootingJoystick = new Touchpad(10, shootingJoystickStyle);
+
+        // Place the joystick in the bottom left corner
+        Table table = new Table();
+        table.setFillParent(true);
+        table.bottom().right();
+
+        // Use the size of the background texture itself instead of manually setting a size
+        table.add(shootingJoystick).size(joystickBackground.getWidth(), joystickBackground.getHeight()).pad(25);
+
+        stage.addActor(table);
+    }
+
     public Touchpad getMovementJoystick() {
         return movementJoystick;
+    }
+
+    public Touchpad getShootingJoystick() {
+        return shootingJoystick;
     }
 
     private void createPauseButton() {
@@ -126,26 +167,6 @@ public class GameScreen implements Screen {
         stage.addActor(table);
     }
 
-    private void createShootButton() {
-        // Load texture for pause button
-        Texture shootTextureUp = new Texture(Gdx.files.internal("UI/GrayButtons/Arrow left.png"));
-        Texture shootTextureDown = new Texture(Gdx.files.internal("UI/YellowButtons/Arrow left.png"));
-        ImageButton.ImageButtonStyle shootStylePause = new ImageButton.ImageButtonStyle();
-
-        shootStylePause.up = new TextureRegionDrawable(shootTextureUp);
-        shootStylePause.down = new TextureRegionDrawable(shootTextureDown);
-
-        shootButton = new ImageButton(shootStylePause);
-
-        // Arrange button in a table
-        Table table = new Table();
-        table.setFillParent(true);
-        table.bottom().right();
-        table.add(shootButton).size(200, 200).pad(200);
-
-        stage.addActor(table);
-    }
-
     @Override
     public void show() {
     }
@@ -162,7 +183,7 @@ public class GameScreen implements Screen {
             gameLoop.render();
         }
         gameLoop.getInputHandler().updateJoystickMovement(this);
-        gameLoop.getInputHandler().setShootPressed(shootButton.isPressed());
+        // gameLoop.getInputHandler().setShootPressed(shootButton.isPressed());
 
         // Draw the stage (buttons, etc.)
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
