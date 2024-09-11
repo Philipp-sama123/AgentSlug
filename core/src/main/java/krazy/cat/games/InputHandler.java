@@ -26,7 +26,7 @@ public class InputHandler implements InputProcessor {
             runRightPressed = joystickX > 0.75f;
 
             jumpPressed = gameScreen.getMovementJoystick().getKnobPercentY() > 0.75;
-            crouchPressed = gameScreen.getMovementJoystick().getKnobPercentY() < -0.25;
+            crouchPressed = gameScreen.getMovementJoystick().getKnobPercentY() < -.5;
         }
     }
 
@@ -76,9 +76,6 @@ public class InputHandler implements InputProcessor {
         if (screenX >= leftWidth && screenX < rightWidth && screenY < topHeight) {
             // Top-center: Jump
             jumpPressed = true;
-        } else if (screenX >= leftWidth && screenX < rightWidth && screenY >= topHeight) {
-            // Bottom-center: Attack
-            attackPressed = true;
         }
 
         return true;
@@ -98,9 +95,6 @@ public class InputHandler implements InputProcessor {
         if (screenX >= leftWidth && screenX < rightWidth && screenY < topHeight) {
             // Top-center: Jump
             jumpPressed = false;
-        } else if (screenX >= leftWidth && screenX < rightWidth && screenY >= topHeight) {
-            // Bottom-center: Attack
-            attackPressed = false;
         }
 
         return true;

@@ -28,10 +28,9 @@ public class CharacterManager {
     private final AnimationSetAgent animationSetAgent;
     private Vector2 mainCharacter = new Vector2();
     private Vector2 velocity = new Vector2();
+
     private float stateTime = 0f;
-    private boolean facingRight = false;
     private AnimationType currentAnimationState = AnimationType.IDLE;
-    private boolean shooting = false;
     private int jumpCount = 0;  // Variable to track jump count
     private boolean jumpPressedLastFrame = false; // Track if jump button was pressed last frame
     private static final int MAX_JUMPS = 2; // Maximum number of jumps allowed
@@ -46,6 +45,11 @@ public class CharacterManager {
     protected static final float HIT_EFFECT_DURATION = 0.1f;
 
     private ShaderProgram redShader;
+
+    private boolean isCrouching = false;
+    private boolean isShooting = false;
+    private boolean isFacingRightUpperBody = false;
+    private boolean isFacingRightLowerBody = false;
 
     public CharacterManager(Texture upperBodySpriteSheet, Texture lowerBodySpriteSheet) {
         animationSetAgent = new AnimationSetAgent(upperBodySpriteSheet, lowerBodySpriteSheet);
@@ -77,7 +81,7 @@ public class CharacterManager {
         stateTime = 0f;
         currentAnimationState = AnimationType.IDLE;
         velocity.set(0, 0);
-        shooting = false;
+        isShooting = false;
         jumpCount = 0; // Reset jump count
     }
 
@@ -122,22 +126,27 @@ public class CharacterManager {
     }
 
     public void updateAnimationState() {
-        if (shooting) {
+        if (isShooting) {
             // Check if the shooting animation has finished
             Animation<TextureRegion> shootAnimation = animationSetAgent.getUpperBodyAnimation(currentAnimationState);
             if (shootAnimation.isAnimationFinished(stateTime)) {
-                shooting = false;
+                isShooting = false;
                 stateTime = 0f;
             }
         }
         if (velocity.y > 0) {
-            currentAnimationState = shooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
+            currentAnimationState = isShooting ? AnimationType.JUMP_SHOOT : AnimationType.JUMP;
         } else if (velocity.y < 0) {
-            currentAnimationState = shooting ? AnimationType.FALL_SHOOT : AnimationType.FALL;
+            currentAnimationState = isShooting ? AnimationType.FALL_SHOOT : AnimationType.FALL;
         } else if (velocity.x != 0) {
-            currentAnimationState = shooting ? (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN_SHOOT : AnimationType.WALK_SHOOT) : (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN : AnimationType.WALK);
+            currentAnimationState = isShooting ? (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN_SHOOT : AnimationType.WALK_SHOOT) : (Math.abs(velocity.x) > MOVE_SPEED ? AnimationType.RUN : AnimationType.WALK);
         } else {
-            currentAnimationState = shooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
+            // No Velocity in any direction
+            if (isCrouching) {
+                currentAnimationState = isShooting ? AnimationType.CROUCH_SHOOT : AnimationType.CROUCH_IDLE;
+            } else {
+                currentAnimationState = isShooting ? AnimationType.STAND_SHOOT : AnimationType.IDLE;
+            }
         }
 
         // Reset horizontal velocity after applying movement
@@ -233,20 +242,21 @@ public class CharacterManager {
     }
 
     public boolean isShooting() {
-        return shooting;
+        return isShooting;
     }
 
     private void landOnGround() {
         mainCharacter.y = 0.f;
         velocity.y = 0;
         jumpCount = 0; // Reset jump count when landing on the ground
-        if (!shooting) {
+        if (!isShooting) {
             currentAnimationState = AnimationType.IDLE;
         }
     }
 
-    public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean jump) {
+    public void handleInput(float deltaTime, boolean moveLeft, boolean moveRight, boolean runLeft, boolean runRight, boolean jump, boolean crouch) {
         boolean isRunning = runLeft || runRight;
+        isCrouching = crouch;
 
         if (jump && !jumpPressedLastFrame && jumpCount < MAX_JUMPS) {
             velocity.y = JUMP_SPEED;
@@ -256,38 +266,46 @@ public class CharacterManager {
 
         if (moveLeft || runLeft) {
             velocity.x = -(isRunning ? RUN_SPEED : MOVE_SPEED);
-            setFacingRight(false);
+            setFacingRightUpperBody(false);
+            setFacingRightLowerBody(false); // ToDo: make something for -- lookLeft (!!)
         } else if (moveRight || runRight) {
             velocity.x = (isRunning ? RUN_SPEED : MOVE_SPEED);
-            setFacingRight(true);
+            setFacingRightUpperBody(true);
+            setFacingRightLowerBody(true);// ToDo: make something for -- lookRight (!!)
         }
 
         mainCharacter.y += velocity.y * deltaTime;
         mainCharacter.x += velocity.x * deltaTime;
 
         jumpPressedLastFrame = jump; // Update jump button state
+
+        if (isCrouching) velocity.x = 0;
     }
 
     private void adjustUpperBodyFrameOrientation() {
-        if (facingRight && !animationSetAgent.isUpperBodyFramesFlipped()) {
+        if (isFacingRightUpperBody && !animationSetAgent.isUpperBodyFramesFlipped()) {
             animationSetAgent.flipUpperBodyFramesHorizontally();
 
-        } else if (!facingRight && animationSetAgent.isUpperBodyFramesFlipped()) {
+        } else if (!isFacingRightUpperBody && animationSetAgent.isUpperBodyFramesFlipped()) {
             animationSetAgent.flipUpperBodyFramesHorizontally();
         }
     }
 
     private void adjustLowerBodyFrameOrientation() {
-        if (facingRight && !animationSetAgent.isLowerBodyFramesFlipped()) {
+        if (isFacingRightLowerBody && !animationSetAgent.isLowerBodyFramesFlipped()) {
             animationSetAgent.flipLowerBodyFramesHorizontally();
 
-        } else if (!facingRight && animationSetAgent.isLowerBodyFramesFlipped()) {
+        } else if (!isFacingRightLowerBody && animationSetAgent.isLowerBodyFramesFlipped()) {
             animationSetAgent.flipLowerBodyFramesHorizontally();
         }
     }
 
-    public void setFacingRight(boolean facingRight) {
-        this.facingRight = facingRight;
+    public void setFacingRightUpperBody(boolean isFacingRightUpperBody) {
+        this.isFacingRightUpperBody = isFacingRightUpperBody;
+    }
+
+    public void setFacingRightLowerBody(boolean isFacingRightLowerBody) {
+        this.isFacingRightLowerBody = isFacingRightLowerBody;
     }
 
     private float getCurrentFrameWidth() {
@@ -297,18 +315,19 @@ public class CharacterManager {
 
     public Rectangle getMainCharacterRectangle() {
         TextureRegion currentFrame = getCurrentUpperBodyFrame();
-        return new Rectangle(facingRight ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 250, currentFrame.getRegionHeight() * SCALE - 100);
+
+        return new Rectangle(isFacingRightUpperBody ? mainCharacter.x + 100 : mainCharacter.x + 150, mainCharacter.y, currentFrame.getRegionWidth() * SCALE - 250, currentFrame.getRegionHeight() * SCALE - 100);
     }
 
     public Bullet shoot() {
-        float bulletOffsetY = 117.5f; // Adding an offset of 50 to the top
-        float bulletOffsetX = facingRight ? 64 * SCALE - 50 : -64 * SCALE + 275; // Different x starting positions depending on the direction
+        float bulletOffsetY = isCrouching ? 50.f : 117.5f; // Adding an offset of 50 to the top
+        float bulletOffsetX = isFacingRightUpperBody ? 64 * SCALE - 50 : -64 * SCALE + 275; // Different x starting positions depending on the direction
 
         Vector2 bulletPosition = new Vector2(mainCharacter.x + bulletOffsetX, mainCharacter.y + (float) getCurrentUpperBodyFrame().getRegionHeight() / 2 + bulletOffsetY);
-        shooting = true; // Set shooting flag to true
+        isShooting = true; // Set shooting flag to true
         stateTime = 0f; // Reset state time to start animation from the beginning
         shootSound.play();
-        return new Bullet(bulletPosition, facingRight);
+        return new Bullet(bulletPosition, isFacingRightUpperBody);
     }
 
     public void handleBulletCollisions(List<Bullet> bullets) {
@@ -319,8 +338,8 @@ public class CharacterManager {
             Bullet bullet = bulletIterator.next();
             if (characterRect.overlaps(bullet.getBoundingRectangle())) {
                 //TODO: think of removing or keeping
-                //bulletIterator.remove();
-                //hitSound.play();
+                bulletIterator.remove();
+                hitSound.play();
                 // Handle collision (e.g., reduce health, trigger an effect, etc.)
             }
         }
@@ -343,7 +362,10 @@ public class CharacterManager {
 
         // Render the main character
         batch.draw(getCurrentUpperBodyFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
-        batch.draw(getCurrentLowerBodyFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
+        if (isFacingRightLowerBody != isFacingRightUpperBody) // TODO: fix those "Magic Numbers" when creating shooting joystick (!)
+            batch.draw(getCurrentLowerBodyFrame(), isFacingRightUpperBody ? mainCharacter.x + 42.5f : mainCharacter.x - 45f, mainCharacter.y, 64 * SCALE, 64 * SCALE);
+        else
+            batch.draw(getCurrentLowerBodyFrame(), mainCharacter.x, mainCharacter.y, 64 * SCALE, 64 * SCALE);
 
         // Reset shader after drawing
         if (isHit) {
