@@ -5,13 +5,11 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -29,7 +27,7 @@ public class GameScreen implements Screen {
 
     private InputMultiplexer inputMultiplexer;
 
-    private Touchpad joystick; // Joystick instance
+    private Touchpad movementJoystick; // Joystick instance
     private Touchpad.TouchpadStyle joystickStyle;
 
     public GameScreen(final AgentSlug game, final GameLoop gameLoop) {
@@ -48,10 +46,10 @@ public class GameScreen implements Screen {
         // Create the pause button
         createPauseButton();
         createShootButton();
-        createJoystick();
+        createMovementJoystick();
     }
 
-    private void createJoystick() {
+    private void createMovementJoystick() {
         // Load textures for the joystick background and knob
         Texture joystickBackground = new Texture(Gdx.files.internal("UI/Joystick_Background_Round.png"));
         Texture joystickKnob = new Texture(Gdx.files.internal("UI/Joystick_Knubble.png"));
@@ -79,7 +77,7 @@ public class GameScreen implements Screen {
         knobDrawable.setMinWidth(knobWidth);  // Adjust knob size if necessary
         knobDrawable.setMinHeight(knobHeight);
 
-        joystick = new Touchpad(10, joystickStyle);
+        movementJoystick = new Touchpad(10, joystickStyle);
 
         // Place the joystick in the bottom left corner
         Table table = new Table();
@@ -87,13 +85,13 @@ public class GameScreen implements Screen {
         table.bottom().left();
 
         // Use the size of the background texture itself instead of manually setting a size
-        table.add(joystick).size(joystickBackground.getWidth(), joystickBackground.getHeight()).pad(25);
+        table.add(movementJoystick).size(joystickBackground.getWidth(), joystickBackground.getHeight()).pad(25);
 
         stage.addActor(table);
     }
 
-    public Touchpad getJoystick() {
-        return joystick;
+    public Touchpad getMovementJoystick() {
+        return movementJoystick;
     }
 
     private void createPauseButton() {

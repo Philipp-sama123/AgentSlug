@@ -119,6 +119,7 @@ public class GameLoop {
             renderCharacterRectangle();
             renderZombieRectangles();
             renderBatRectangles();
+            renderTiledRectangles();
         }
         renderPlatforms();
     }
@@ -179,7 +180,15 @@ public class GameLoop {
         // 2.) handleCollisions
         // 3.) updateAnimationState
         characterManager.update(deltaTime);
-        characterManager.handleInput(deltaTime, inputHandler.isLeftPressed(), inputHandler.isRightPressed(), inputHandler.isRunLeftPressed(), inputHandler.isRunRightPressed(), inputHandler.isJumpPressed());
+        characterManager.handleInput(
+            deltaTime,
+            inputHandler.isLeftPressed(),
+            inputHandler.isRightPressed(),
+            inputHandler.isRunLeftPressed(),
+            inputHandler.isRunRightPressed(),
+            inputHandler.isJumpPressed(),
+            inputHandler.isCrouchPressed()
+        );
         characterManager.handleCollisions(platforms, tiledRectangles, zombies, bats, bullets);
         characterManager.updateAnimationState();
 
@@ -293,6 +302,15 @@ public class GameLoop {
         for (BatManager bat : bats) {
             Rectangle batRect = bat.getBatRectangle();
             shapeRenderer.rect(batRect.x, batRect.y, batRect.width, batRect.height);
+        }
+        shapeRenderer.end();
+    }
+    private void renderTiledRectangles() {
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.RED);
+        for (Rectangle tiledRectangle : tiledRectangles) {
+            shapeRenderer.rect(tiledRectangle.x, tiledRectangle.y, tiledRectangle.width, tiledRectangle.height);
         }
         shapeRenderer.end();
     }
